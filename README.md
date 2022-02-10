@@ -6,7 +6,7 @@
 源库链接：[自动评价](https://github.com/qiu-lzsnmb/jd_lzsnmb)
 [评论爬虫](https://github.com/2274900/JD_comment_spider)
 
-### 本脚本只是对以上两位的结合以及魔改，用于解决评论文不对题的问题。经测试，本脚本能初步解决这一问题。 
+### 本脚本只是对以上两位的结合以及魔改，用于解决评论文不对题的问题。经测试，本脚本能初步解决这一问题。
 
 ## 思路
 
@@ -14,7 +14,15 @@
 
 ## 使用方法
 
-获取电脑版ck后填入 auto_comment_plus.py 文件，运行此文件即可
+在终端中执行：
+
+```bash
+git clone https://github.com/Dimlitter/jd_AutoComment.git
+cd jd_AutoComment
+pip install -r requirements.txt
+```
+
+然后获取电脑版ck后填入 auto_comment_plus.py 文件，运行此文件即可
 
 > 此脚本需要的依赖较多，需自行安装
 
