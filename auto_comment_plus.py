@@ -9,13 +9,18 @@ import jieba.analyse
 import requests
 from lxml import etree
 import jdspider
+import yaml
+
+CONFIG_PATH = './config.yml'
 
 jieba.setLogLevel(jieba.logging.INFO)
 """
 ck填到下面就好，只支持网页版的Ck
 以下为最短格式
 """
-ck = ''
+with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
+    cfg = yaml.safe_load(f)
+ck = cfg['user']['cookie']
 
 headers = {
     'cookie': ck,
