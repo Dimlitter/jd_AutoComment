@@ -1,0 +1,5 @@
+jieba
+requests
+lxml
+zhon
+pyyaml
