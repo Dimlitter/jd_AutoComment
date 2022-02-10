@@ -5,21 +5,30 @@
 
 import random
 import time
+
 import jieba.analyse
 import requests
+import yaml
 from lxml import etree
+
 import jdspider
 
+
+CONFIG_PATH = './config.yml'
+
+
 jieba.setLogLevel(jieba.logging.INFO)
-"""
-ck填到下面就好，只支持网页版的Ck
-以下为最短格式
-"""
-ck = ''
+
+
+with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
+    cfg = yaml.safe_load(f)
+ck = cfg['user']['cookie']
 
 headers = {
     'cookie': ck,
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/'
+                  '537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/'
+                  '537.36'
 }
 
 
@@ -35,7 +44,7 @@ def generation(pname, _class=0):
     # class 0是评价 1是提取id
     try:
         name = jieba.analyse.textrank(pname, topK=5, allowPOS='n')[0]
-    except:
+    except Exception as _:
         name = "宝贝"
     if _class == 1:
         return name
@@ -49,6 +58,7 @@ def generation(pname, _class=0):
                 comments = comments + result.pop()
             return 5, (
                 comments.replace("$", name))
+
 
 # 查询全部评价
 def all_evaluate():
@@ -73,7 +83,8 @@ def ordinary(N):
     Order_data = []
     req_et = []
     for i in range((N['待评价订单'] // 20) + 1):
-        url = f'https://club.jd.com/myJdcomments/myJdcomment.action?sort=0&page={i + 1}'
+        url = (f'https://club.jd.com/myJdcomments/myJdcomment.action?sort=0&'
+               f'page={i + 1}')
         req = requests.get(url, headers=headers)
         req_et.append(etree.HTML(req.text))
     for i in req_et:
@@ -86,14 +97,16 @@ def ordinary(N):
     print(f"当前共有{N['待评价订单']}个评价。")
     for i, Order in enumerate(Order_data):
         oid = Order.xpath('tr[@class="tr-th"]/td/span[3]/a/text()')[0]
-        oname_data = Order.xpath('tr[@class="tr-bd"]/td[1]/div[1]/div[2]/div/a/text()')
-        pid_data = Order.xpath('tr[@class="tr-bd"]/td[1]/div[1]/div[2]/div/a/@href')
+        oname_data = Order.xpath(
+            'tr[@class="tr-bd"]/td[1]/div[1]/div[2]/div/a/text()')
+        pid_data = Order.xpath(
+            'tr[@class="tr-bd"]/td[1]/div[1]/div[2]/div/a/@href')
         for oname, pid in zip(oname_data, pid_data):
             pid = pid.replace('//item.jd.com/', '').replace('.html', '')
 
             print(f"\t{i}.开始评价订单\t{oname}[{oid}]")
-            url2 = f"https://club.jd.com/myJdcomments/saveProductComment.action"
-            xing,Str = generation(oname)
+            url2 = "https://club.jd.com/myJdcomments/saveProductComment.action"
+            xing, Str = generation(oname)
             print(f'\t\t评价内容,星级{xing}：', Str)
             data2 = {
                 'orderId': oid,
@@ -113,10 +126,12 @@ def ordinary(N):
 def sunbw(N):
     Order_data = []
     for i in range((N['待晒单'] // 20) + 1):
-        url = f"https://club.jd.com/myJdcomments/myJdcomment.action?sort=1&page={i + 1}"
+        url = (f'https://club.jd.com/myJdcomments/myJdcomment.action?sort=1'
+               f'&page={i + 1}')
         req = requests.get(url, headers=headers)
         req_et = etree.HTML(req.text)
-        Order_data.extend(req_et.xpath('//*[@id="evalu01"]/div[2]/div[1]/div[@class="comt-plist"]/div[1]'))
+        Order_data.extend(req_et.xpath(
+            '//*[@id="evalu01"]/div[2]/div[1]/div[@class="comt-plist"]/div[1]'))
     print(f"当前共有{N['待晒单']}个需要晒单。")
     for i, Order in enumerate(Order_data):
         oname = Order.xpath('ul/li[1]/div/div[2]/div[1]/a/text()')[0]
@@ -126,17 +141,21 @@ def sunbw(N):
         print(f'\t开始晒单{i},{oname}')
         # 获取图片
         pname = generation(pname=oname, _class=1)
-        url1 = f"https://club.jd.com/discussion/getProductPageImageCommentList.action?productId={pid}"
+        url1 = (f'https://club.jd.com/discussion/getProductPageImageCommentList'
+                f'.action?productId={pid}')
         imgdata = requests.get(url1, headers=headers).json()
         if imgdata["imgComments"]["imgCommentCount"] == 0:
-            url1 = "https://club.jd.com/discussion/getProductPageImageCommentList.action?productId=1190881"
+            url1 = ('https://club.jd.com/discussion/getProductPageImage'
+                    'CommentList.action?productId=1190881')
             imgdata = requests.get(url1, headers=headers).json()
         imgurl = imgdata["imgComments"]["imgList"][0]["imageUrl"]
 
         #
         print(f'\t\t图片url={imgurl}')
-        url2 = "https://club.jd.com/myJdcomments/saveShowOrder.action"  # 提交晒单
-        headers['Referer'] = 'https://club.jd.com/myJdcomments/myJdcomment.action?sort=1'
+        # 提交晒单
+        url2 = "https://club.jd.com/myJdcomments/saveShowOrder.action"
+        headers['Referer'] = ('https://club.jd.com/myJdcomments/myJdcomment.'
+                              'action?sort=1')
         headers['Origin'] = 'https://club.jd.com'
         headers['Content-Type'] = 'application/x-www-form-urlencoded'
         data = {
@@ -162,21 +181,27 @@ def review(N):
     req_et = []
     Order_data = []
     for i in range((N['待追评'] // 20) + 1):
-        url = f"https://club.jd.com/myJdcomments/myJdcomment.action?sort=3&page={i + 1}"
+        url = (f"https://club.jd.com/myJdcomments/myJdcomment.action?sort=3"
+               f"&page={i + 1}")
         req = requests.get(url, headers=headers)
         req_et.append(etree.HTML(req.text))
     for i in req_et:
-        Order_data.extend(i.xpath('//*[@id="main"]/div[2]/div[2]/table/tr[@class="tr-bd"]'))
+        Order_data.extend(
+            i.xpath('//*[@id="main"]/div[2]/div[2]/table/tr[@class="tr-bd"]'))
     if len(Order_data) != N['待追评']:
         for i in req_et:
-            Order_data.extend(i.xpath('//*[@id="main"]/div[2]/div[2]/table/tbody/tr[@class="tr-bd"]'))
+            Order_data.extend(i.xpath(
+                '//*[@id="main"]/div[2]/div[2]/table/tbody/tr[@class="tr-bd"]'))
     print(f"当前共有{N['待追评']}个需要追评。")
     for i, Order in enumerate(Order_data):
         oname = Order.xpath('td[1]/div/div[2]/div/a/text()')[0]
         _id = Order.xpath('td[3]/div/a/@href')[0]
         print(f'\t开始第{i}，{oname}')
-        url1 = "https://club.jd.com/afterComments/saveAfterCommentAndShowOrder.action"
-        pid, oid = _id.replace('http://club.jd.com/afterComments/productPublish.action?sku=', "").split('&orderId=')
+        url1 = ("https://club.jd.com/afterComments/"
+                "saveAfterCommentAndShowOrder.action")
+        pid, oid = _id.replace(
+            'http://club.jd.com/afterComments/productPublish.action?sku=',
+            "").split('&orderId=')
         context = generation(oname)
         print(f'\t\t追评内容：{context}')
         req_url1 = requests.post(url1, headers=headers, data={
@@ -197,21 +222,25 @@ def Service_rating(N):
     Order_data = []
     req_et = []
     for i in range((N['服务评价'] // 20) + 1):
-        url = f"https://club.jd.com/myJdcomments/myJdcomment.action?sort=4&page={i + 1}"
+        url = (f"https://club.jd.com/myJdcomments/myJdcomment.action?sort=4"
+               f"&page={i + 1}")
         req = requests.get(url, headers=headers)
         req_et.append(etree.HTML(req.text))
     for i in req_et:
-        Order_data.extend(i.xpath('//*[@id="main"]/div[2]/div[2]/table/tbody/tr[@class="tr-bd"]'))
+        Order_data.extend(i.xpath(
+            '//*[@id="main"]/div[2]/div[2]/table/tbody/tr[@class="tr-bd"]'))
     if len(Order_data) != N['服务评价']:
         Order_data = []
         for i in req_et:
-            Order_data.extend(i.xpath('//*[@id="main"]/div[2]/div[2]/table/tr[@class="tr-bd"]'))
+            Order_data.extend(i.xpath(
+                '//*[@id="main"]/div[2]/div[2]/table/tr[@class="tr-bd"]'))
     print(f"当前共有{N['服务评价']}个需要服务评价。")
     for i, Order in enumerate(Order_data):
         oname = Order.xpath('td[1]/div[1]/div[2]/div/a/text()')[0]
         oid = Order.xpath('td[4]/div/a[1]/@oid')[0]
         print(f'\t开始第{i}，{oname}')
-        url1 = f'https://club.jd.com/myJdcomments/insertRestSurvey.action?voteid=145&ruleid={oid}'
+        url1 = (f'https://club.jd.com/myJdcomments/insertRestSurvey.action'
+                f'?voteid=145&ruleid={oid}')
         data1 = {
             'oid': oid,
             'gid': '32',
