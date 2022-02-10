@@ -9,18 +9,13 @@ import jieba.analyse
 import requests
 from lxml import etree
 import jdspider
-import yaml
-
-CONFIG_PATH = './config.yml'
 
 jieba.setLogLevel(jieba.logging.INFO)
 """
 ck填到下面就好，只支持网页版的Ck
 以下为最短格式
 """
-with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
-    cfg = yaml.safe_load(f)
-ck = cfg['user']['cookie']
+ck = ''
 
 headers = {
     'cookie': ck,
@@ -29,15 +24,14 @@ headers = {
 
 
 # 评价生成
-def generation(pname, _class=0, _type=1):
+def generation(pname, _class=0):
     list = ['商品名']
     list.clear()
     list.append(pname)
     for item in list:
         spider = jdspider.JDSpider(item)
-        result = spider.getData(3, 3) #这里可以自己改
+        result = spider.getData(4, 3) #这里可以自己改
 
-    # 0是追评 1是评价
     # class 0是评价 1是提取id
     try:
         name = jieba.analyse.textrank(pname, topK=5, allowPOS='n')[0]
@@ -46,29 +40,15 @@ def generation(pname, _class=0, _type=1):
     if _class == 1:
         return name
     else:
-        datas = {
-            1: {
-                "开始": result,
-                "中间": result, #重复的几率不大，相信我（
-                "结束": result
-            },
-            0: {
-                "开始": result,
-                "中间": result,
-                "结束": result
-            }
-        }
-        if _type == 1:
-            comments = datas[_type]
-            return random.randint(3, 5), (
-                    random.choice(comments["开始"]) + random.choice(comments["中间"]) + random.choice(comments["结束"])).replace(
-                "$", name)
-        elif _type == 0:
-            comments = datas[_type]
-            return (
-                    random.choice(comments["开始"]) + random.choice(comments["中间"]) + random.choice(comments["结束"])).replace(
-                "$", name)
-
+        comments = ''
+        if len(result) > 8 :
+            for i in range(8):
+                comments = comments + result.pop()
+        else:
+            for i in range(len(result)):
+                comments = comments + result.pop()
+            return 5, (
+                comments.replace("$", name))
 
 # 查询全部评价
 def all_evaluate():
@@ -114,7 +94,6 @@ def ordinary(N):
             print(f"\t{i}.开始评价订单\t{oname}[{oid}]")
             url2 = f"https://club.jd.com/myJdcomments/saveProductComment.action"
             xing,Str = generation(oname)
-            xing = 5 #写死五星
             print(f'\t\t评价内容,星级{xing}：', Str)
             data2 = {
                 'orderId': oid,
@@ -125,7 +104,7 @@ def ordinary(N):
                 'anonymousFlag': '1'
             }
             pj2 = requests.post(url2, headers=headers, data=data2)
-            time.sleep(20)
+            time.sleep(10)
     N['待评价订单'] -= 1
     return N
 
@@ -173,7 +152,7 @@ def sunbw(N):
             'saveStatus': 3
         }, headers=headers)
         print('完成')
-        time.sleep(50)
+        time.sleep(5)
         N['待晒单'] -= 1
     return N
 
@@ -198,7 +177,7 @@ def review(N):
         print(f'\t开始第{i}，{oname}')
         url1 = "https://club.jd.com/afterComments/saveAfterCommentAndShowOrder.action"
         pid, oid = _id.replace('http://club.jd.com/afterComments/productPublish.action?sku=', "").split('&orderId=')
-        context = generation(oname, _type=0)
+        context = generation(oname)
         print(f'\t\t追评内容：{context}')
         req_url1 = requests.post(url1, headers=headers, data={
             'orderId': oid,
@@ -208,7 +187,7 @@ def review(N):
             'score': 5
         })
         print('完成')
-        time.sleep(30)
+        time.sleep(10)
         N['待追评'] -= 1
     return N
 
@@ -247,7 +226,7 @@ def Service_rating(N):
         }
         pj1 = requests.post(url1, headers=headers, data=data1)
         print("\t\t", pj1.text)
-        time.sleep(25)
+        time.sleep(15)
         N['服务评价'] -= 1
     return N
 
