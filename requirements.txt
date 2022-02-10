@@ -1,0 +1,4 @@
+jieba
+requests
+lxml
+zhon
