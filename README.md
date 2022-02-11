@@ -22,7 +22,18 @@ cd jd_AutoComment
 pip install -r requirements.txt
 ```
 
-然后获取电脑版ck后填入 auto_comment_plus.py 文件，运行此文件即可
+获取电脑版ck后填入 `config.yml` 文件：
+
+```yml
+user:
+  cookie: ''
+```
+
+最后运行 `auto_comment_plus.py` ：
+
+```bash
+python auto_comment_plus.py
+```
 
 > 此脚本需要的依赖较多，需自行安装
 
