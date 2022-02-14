@@ -30,16 +30,23 @@ headers = {
                   '537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/'
                   '537.36'
 }
-
-
-# 评价生成
-def generation(pname, _class=0):
+# 评价生成 
+def generation(pname, _class=0, _type=1):
     list = ['商品名']
     list.clear()
     list.append(pname)
     for item in list:
         spider = jdspider.JDSpider(item)
-        result = spider.getData(4, 3) #这里可以自己改
+        #增加对增值服务的评价鉴别
+        if  "赠品" in pname or "非实物" in pname or "增值服务" in pname :
+            result = ["赠品挺好的。",
+            "很贴心，能有这样免费赠送的赠品",
+            "正好想着要不要多买一份增值服务，没想到还有这样的赠品。",
+            "赠品正合我意。",
+            "赠品很好，挺不错的。"
+            ]
+        else:
+            result = spider.getData(4, 3) #这里可以自己改
 
     # class 0是评价 1是提取id
     try:
@@ -50,14 +57,19 @@ def generation(pname, _class=0):
         return name
     else:
         comments = ''
-        if len(result) > 8 :
-            for i in range(8):
-                comments = comments + result.pop()
+        if _type == 1:
+            num = 8
+        elif _type == 0:
+            num = 5
+        if len(result) < num :
+            num = len(result)
         else:
-            for i in range(len(result)):
-                comments = comments + result.pop()
-            return 5, (
-                comments.replace("$", name))
+            num = num 
+        for i in range(num):
+            comments = comments + result.pop(random.randint(0, len(result) - 1))
+        
+
+        return 5, comments.replace("$", name)
 
 
 # 查询全部评价
@@ -140,7 +152,6 @@ def sunbw(N):
 
         print(f'\t开始晒单{i},{oname}')
         # 获取图片
-        pname = generation(pname=oname, _class=1)
         url1 = (f'https://club.jd.com/discussion/getProductPageImageCommentList'
                 f'.action?productId={pid}')
         imgdata = requests.get(url1, headers=headers).json()
@@ -202,7 +213,7 @@ def review(N):
         pid, oid = _id.replace(
             'http://club.jd.com/afterComments/productPublish.action?sku=',
             "").split('&orderId=')
-        context = generation(oname)
+        _ , context = generation(oname,_type=0)
         print(f'\t\t追评内容：{context}')
         req_url1 = requests.post(url1, headers=headers, data={
             'orderId': oid,
