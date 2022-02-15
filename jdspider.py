@@ -34,7 +34,6 @@ class JDSpider:
             'sec-ch-ua-mobile': '?0',
             'sec-ch-ua-platform': '"Windows"',
             'sec-fetch-dest': 'document',
-            'sec-fetch-mode':' navigate',
             'sec-fetch-site':'none',
             'sec-fetch-user': '?1',
             'upgrade-insecure-requests': '1',
