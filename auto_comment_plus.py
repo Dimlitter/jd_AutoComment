@@ -32,15 +32,15 @@ headers = {
 }
 # 评价生成 
 def generation(pname, _class=0, _type=1):
-    list = ['商品名']
-    list.clear()
-    list.append(pname)
-    for item in list:
+    items = ['商品名']
+    items.clear()
+    items.append(pname)
+    for item in items:
         spider = jdspider.JDSpider(item)
         #增加对增值服务的评价鉴别
         if  "赠品" in pname or "非实物" in pname or "增值服务" in pname :
             result = ["赠品挺好的。",
-            "很贴心，能有这样免费赠送的赠品",
+            "很贴心，能有这样免费赠送的赠品!",
             "正好想着要不要多买一份增值服务，没想到还有这样的赠品。",
             "赠品正合我意。",
             "赠品很好，挺不错的。"
