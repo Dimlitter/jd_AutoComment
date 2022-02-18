@@ -3,6 +3,7 @@
 # @Author : @qiu-lzsnmb and @Dimlitter
 # @File : auto_comment_plus.py
 
+import argparse
 import random
 import time
 
@@ -14,12 +15,30 @@ from lxml import etree
 import jdspider
 
 
+# constants
 CONFIG_PATH = './config.yml'
+ORDINARY_SLEEP_SEC = 10
+SUNBW_SLEEP_SEC = 5
+REVIEW_SLEEP_SEC = 10
+SERVICE_RATING_SLEEP_SEC = 15
 
 
+# parse arguments
+parser = argparse.ArgumentParser()
+parser.add_argument('--dry-run',
+                    help='have a full run without comment submission',
+                    action='store_true')
+args = parser.parse_args()
+opts = {
+    'dry_run': args.dry_run
+}
+
+
+# logging
 jieba.setLogLevel(jieba.logging.INFO)
 
 
+# parse configurations
 with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
     cfg = yaml.safe_load(f)
 ck = cfg['user']['cookie']
@@ -43,23 +62,26 @@ headers = {
     'Accept-Encoding': 'gzip, deflate, br',
     'Accept-Language': 'zh-CN,zh;q=0.9',
 }
-# 评价生成 
-def generation(pname, _class=0, _type=1):
+
+
+# 评价生成
+def generation(pname, _class=0, _type=1, opts=None):
+    opts = opts or {}
     items = ['商品名']
     items.clear()
     items.append(pname)
     for item in items:
         spider = jdspider.JDSpider(item)
-        #增加对增值服务的评价鉴别
-        if  "赠品" in pname or "非实物" in pname or "增值服务" in pname :
+        # 增加对增值服务的评价鉴别
+        if "赠品" in pname or "非实物" in pname or "增值服务" in pname:
             result = ["赠品挺好的。",
-            "很贴心，能有这样免费赠送的赠品!",
-            "正好想着要不要多买一份增值服务，没想到还有这样的赠品。",
-            "赠品正合我意。",
-            "赠品很好，挺不错的。"
-            ]
+                      "很贴心，能有这样免费赠送的赠品!",
+                      "正好想着要不要多买一份增值服务，没想到还有这样的赠品。",
+                      "赠品正合我意。",
+                      "赠品很好，挺不错的。"
+                      ]
         else:
-            result = spider.getData(4, 3) #这里可以自己改
+            result = spider.getData(4, 3)  # 这里可以自己改
 
     # class 0是评价 1是提取id
     try:
@@ -74,19 +96,20 @@ def generation(pname, _class=0, _type=1):
             num = 6
         elif _type == 0:
             num = 4
-        if len(result) < num :
+        if len(result) < num:
             num = len(result)
         else:
-            num = num 
+            num = num
         for i in range(num):
-            comments = comments + result.pop(random.randint(0, len(result) - 1))
-        
+            comments = comments + \
+                result.pop(random.randint(0, len(result) - 1))
 
         return 5, comments.replace("$", name)
 
 
 # 查询全部评价
-def all_evaluate():
+def all_evaluate(opts=None):
+    opts = opts or {}
     N = {}
     url = 'https://club.jd.com/myJdcomments/myJdcomment.action?'
     req = requests.get(url, headers=headers)
@@ -104,7 +127,8 @@ def all_evaluate():
 
 
 # 普通评价
-def ordinary(N):
+def ordinary(N, opts=None):
+    opts = opts or {}
     Order_data = []
     req_et = []
     for i in range((N['待评价订单'] // 20) + 1):
@@ -131,7 +155,7 @@ def ordinary(N):
 
             print(f"\t{i}.开始评价订单\t{oname}[{oid}]")
             url2 = "https://club.jd.com/myJdcomments/saveProductComment.action"
-            xing, Str = generation(oname)
+            xing, Str = generation(oname, opts=opts)
             print(f'\t\t评价内容,星级{xing}：', Str)
             data2 = {
                 'orderId': oid,
@@ -141,14 +165,16 @@ def ordinary(N):
                 'saveStatus': '1',
                 'anonymousFlag': '1'
             }
-            pj2 = requests.post(url2, headers=headers, data=data2)
-            time.sleep(10)
+            if not opts.get('dry_run'):
+                pj2 = requests.post(url2, headers=headers, data=data2)
+            time.sleep(ORDINARY_SLEEP_SEC)
     N['待评价订单'] -= 1
     return N
 
 
 # 晒单评价
-def sunbw(N):
+def sunbw(N, opts=None):
+    opts = opts or {}
     Order_data = []
     for i in range((N['待晒单'] // 20) + 1):
         url = (f'https://club.jd.com/myJdcomments/myJdcomment.action?sort=1'
@@ -188,20 +214,22 @@ def sunbw(N):
             'imgs': imgurl,
             'saveStatus': 3
         }
-        req_url2 = requests.post(url2, data={
-            'orderId': oid,
-            'productId': pid,
-            'imgs': imgurl,
-            'saveStatus': 3
-        }, headers=headers)
+        if not opts.get('dry_run'):
+            req_url2 = requests.post(url2, data={
+                'orderId': oid,
+                'productId': pid,
+                'imgs': imgurl,
+                'saveStatus': 3
+            }, headers=headers)
         print('完成')
-        time.sleep(5)
+        time.sleep(SUNBW_SLEEP_SEC)
         N['待晒单'] -= 1
     return N
 
 
 # 追评
-def review(N):
+def review(N, opts=None):
+    opts = opts or {}
     req_et = []
     Order_data = []
     for i in range((N['待追评'] // 20) + 1):
@@ -226,23 +254,25 @@ def review(N):
         pid, oid = _id.replace(
             'http://club.jd.com/afterComments/productPublish.action?sku=',
             "").split('&orderId=')
-        _ , context = generation(oname,_type=0)
+        _, context = generation(oname, _type=0, opts=opts)
         print(f'\t\t追评内容：{context}')
-        req_url1 = requests.post(url1, headers=headers, data={
-            'orderId': oid,
-            'productId': pid,
-            'content': bytes(context, encoding="gbk"),
-            'anonymousFlag': 1,
-            'score': 5
-        })
+        if not opts.get('dry_run'):
+            req_url1 = requests.post(url1, headers=headers, data={
+                'orderId': oid,
+                'productId': pid,
+                'content': bytes(context, encoding="gbk"),
+                'anonymousFlag': 1,
+                'score': 5
+            })
         print('完成')
-        time.sleep(10)
+        time.sleep(REVIEW_SLEEP_SEC)
         N['待追评'] -= 1
     return N
 
 
 # 服务评价
-def Service_rating(N):
+def Service_rating(N, opts=None):
+    opts = opts or {}
     Order_data = []
     req_et = []
     for i in range((N['服务评价'] // 20) + 1):
@@ -277,53 +307,56 @@ def Service_rating(N):
             'ro899': f'899A{random.randint(4, 5)}',  # 快递员服务
             'ro900': f'900A{random.randint(4, 5)}'  # 快递员服务
         }
-        pj1 = requests.post(url1, headers=headers, data=data1)
+        if not opts.get('dry_run'):
+            pj1 = requests.post(url1, headers=headers, data=data1)
         print("\t\t", pj1.text)
-        time.sleep(15)
+        time.sleep(SERVICE_RATING_SLEEP_SEC)
         N['服务评价'] -= 1
     return N
 
 
-def No():
+def No(opts=None):
+    opts = opts or {}
     print()
-    N = all_evaluate()
+    N = all_evaluate(opts)
     for i in N:
         print(i, N[i], end="----")
     print()
     return N
 
 
-def main():
+def main(opts=None):
+    opts = opts or {}
     print("开始京东批量评价！")
-    N = No()
+    N = No(opts)
     if not N:
         print('Ck出现错误，请重新抓取！')
         exit()
     if N['待评价订单'] != 0:
         print("1.开始普通评价")
-        N = ordinary(N)
-        N = No()
+        N = ordinary(N, opts)
+        N = No(opts)
     if N['待晒单'] != 0:
         print("2.开始晒单评价")
-        N = sunbw(N)
-        N = No()
+        N = sunbw(N, opts)
+        N = No(opts)
     if N['待追评'] != 0:
         print("3.开始批量追评！")
-        N = review(N)
-        N = No()
+        N = review(N, opts)
+        N = No(opts)
     if N['服务评价'] != 0:
         print('4.开始服务评价')
-        N = Service_rating(N)
-        N = No()
+        N = Service_rating(N, opts)
+        N = No(opts)
     print("全部完成啦！")
     for i in N:
         if N[i] != 0:
             print("出现了二次错误，跳过了部分，重新尝试")
-            main()
+            main(opts)
 
 
 if __name__ == '__main__':
     try:
-        main()
+        main(opts)
     except RecursionError:
         print("多次出现未完成情况，程序自动退出")
