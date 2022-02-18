@@ -6,15 +6,12 @@ import json
 import logging
 import random
 import re
-import sys
 import time
 from urllib.parse import quote, urlencode
 
 import requests
 import zhon.hanzi
 from lxml import etree
-
-# import pymysql
 
 
 class JDSpider:
@@ -27,18 +24,18 @@ class JDSpider:
         self.headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, br',
-            'accept-language':'zh-CN,zh;q=0.9',
+            'accept-language': 'zh-CN,zh;q=0.9',
             'cache-control': 'max-age=0',
-            'dnt':'1',
+            'dnt': '1',
             'sec-ch-ua': '" Not A;Brand";v="99", "Chromium";v="98", "Google Chrome";v="98"',
             'sec-ch-ua-mobile': '?0',
             'sec-ch-ua-platform': '"Windows"',
             'sec-fetch-dest': 'document',
-            'sec-fetch-site':'none',
+            'sec-fetch-site': 'none',
             'sec-fetch-user': '?1',
             'upgrade-insecure-requests': '1',
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.82 Safari/537.36'
-            }
+        }
         self.productsId = self.getId()
         self.comtype = {1: "nagetive", 2: "medium", 3: "positive"}
         self.categlory = categlory
@@ -87,9 +84,9 @@ class JDSpider:
         for j in range(sum):
             id = self.productsId[j]
             header = self.getHeaders(id)
-            for i in range(1,maxPage):
-                param,url = self.getParamUrl(id,i,score)
-                print("正在爬取评论信息>>>>>>>>>第：%d 个，第 %d 页"%(j,i))
+            for i in range(1, maxPage):
+                param, url = self.getParamUrl(id, i, score)
+                print("正在爬取评论信息>>>>>>>>>第：%d 个，第 %d 页" % (j, i))
                 try:
                     response = requests.get(url, headers=header, params=param)
                 except Exception as e:
@@ -123,33 +120,33 @@ class JDSpider:
         # 存入列表,简单处理评价
         remarks = []
         for i in range(len(comments)):
-            rst = re.findall(zhon.hanzi.sentence,comments[i])
+            rst = re.findall(zhon.hanzi.sentence, comments[i])
             if len(rst) == 0 or rst == ['。'] or rst == ['？'] or rst == ['！'] or rst == ['.'] or rst == [','] or rst == ['?'] or rst == ['!']:
-                logging.warning("拆分失败或结果不符(去除空格和标点符号)：%s"%(rst))
+                logging.warning("拆分失败或结果不符(去除空格和标点符号)：%s" % (rst))
             else:
                 remarks.append(rst)
         result = self.solvedata(remarks=remarks)
-        if len(result)==0:
+        if len(result) == 0:
             logging.warning("当前商品没有评价,使用默认评价")
             result = ["考虑买这个$之前我是有担心过的，因为我不知道$的质量和品质怎么样，但是看了评论后我就放心了。",
-                    "买这个$之前我是有看过好几家店，最后看到这家店的评价不错就决定在这家店买 ",
-                    "看了好几家店，也对比了好几家店，最后发现还是这一家的$评价最好。",
-                    "看来看去最后还是选择了这家。",
-                    "之前在这家店也买过其他东西，感觉不错，这次又来啦。",
-                    "这家的$的真是太好用了，用了第一次就还想再用一次。",
-                    "收到货后我非常的开心，因为$的质量和品质真的非常的好！",
-                    "拆开包装后惊艳到我了，这就是我想要的$!",
-                    "快递超快！包装的很好！！很喜欢！！！",
-                    "包装的很精美！$的质量和品质非常不错！",
-                    "收到快递后迫不及待的拆了包装。$我真的是非常喜欢",
-                    "真是一次难忘的购物，这辈子没见过这么好用的东西！！",
-                    "经过了这次愉快的购物，我决定如果下次我还要买$的话，我一定会再来这家店买的。",
-                    "不错不错！",
-                    "我会推荐想买$的朋友也来这家店里买",
-                    "真是一次愉快的购物！",
-                    "大大的好评!以后买$再来你们店！(￣▽￣)",
-                    "真是一次愉快的购物！"
-                    ]
+                      "买这个$之前我是有看过好几家店，最后看到这家店的评价不错就决定在这家店买 ",
+                      "看了好几家店，也对比了好几家店，最后发现还是这一家的$评价最好。",
+                      "看来看去最后还是选择了这家。",
+                      "之前在这家店也买过其他东西，感觉不错，这次又来啦。",
+                      "这家的$的真是太好用了，用了第一次就还想再用一次。",
+                      "收到货后我非常的开心，因为$的质量和品质真的非常的好！",
+                      "拆开包装后惊艳到我了，这就是我想要的$!",
+                      "快递超快！包装的很好！！很喜欢！！！",
+                      "包装的很精美！$的质量和品质非常不错！",
+                      "收到快递后迫不及待的拆了包装。$我真的是非常喜欢",
+                      "真是一次难忘的购物，这辈子没见过这么好用的东西！！",
+                      "经过了这次愉快的购物，我决定如果下次我还要买$的话，我一定会再来这家店买的。",
+                      "不错不错！",
+                      "我会推荐想买$的朋友也来这家店里买",
+                      "真是一次愉快的购物！",
+                      "大大的好评!以后买$再来你们店！(￣▽￣)",
+                      "真是一次愉快的购物！"
+                      ]
         return result
 
     def solvedata(self, remarks):
