@@ -43,23 +43,25 @@ headers = {
     'Accept-Encoding': 'gzip, deflate, br',
     'Accept-Language': 'zh-CN,zh;q=0.9',
 }
-# 评价生成 
+
+
+# 评价生成
 def generation(pname, _class=0, _type=1):
     items = ['商品名']
     items.clear()
     items.append(pname)
     for item in items:
         spider = jdspider.JDSpider(item)
-        #增加对增值服务的评价鉴别
-        if  "赠品" in pname or "非实物" in pname or "增值服务" in pname :
+        # 增加对增值服务的评价鉴别
+        if "赠品" in pname or "非实物" in pname or "增值服务" in pname:
             result = ["赠品挺好的。",
-            "很贴心，能有这样免费赠送的赠品!",
-            "正好想着要不要多买一份增值服务，没想到还有这样的赠品。",
-            "赠品正合我意。",
-            "赠品很好，挺不错的。"
-            ]
+                      "很贴心，能有这样免费赠送的赠品!",
+                      "正好想着要不要多买一份增值服务，没想到还有这样的赠品。",
+                      "赠品正合我意。",
+                      "赠品很好，挺不错的。"
+                      ]
         else:
-            result = spider.getData(4, 3) #这里可以自己改
+            result = spider.getData(4, 3)  # 这里可以自己改
 
     # class 0是评价 1是提取id
     try:
@@ -74,13 +76,13 @@ def generation(pname, _class=0, _type=1):
             num = 6
         elif _type == 0:
             num = 4
-        if len(result) < num :
+        if len(result) < num:
             num = len(result)
         else:
-            num = num 
+            num = num
         for i in range(num):
-            comments = comments + result.pop(random.randint(0, len(result) - 1))
-        
+            comments = comments + \
+                result.pop(random.randint(0, len(result) - 1))
 
         return 5, comments.replace("$", name)
 
@@ -226,7 +228,7 @@ def review(N):
         pid, oid = _id.replace(
             'http://club.jd.com/afterComments/productPublish.action?sku=',
             "").split('&orderId=')
-        _ , context = generation(oname,_type=0)
+        _, context = generation(oname, _type=0)
         print(f'\t\t追评内容：{context}')
         req_url1 = requests.post(url1, headers=headers, data={
             'orderId': oid,
