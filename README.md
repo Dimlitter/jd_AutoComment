@@ -12,9 +12,11 @@
 
 由爬虫先行对商品的既有评价进行爬取，在此基础上进行自己的评价
 
-## 使用方法
+## 用法
 
 ### <请先确保python版本为最新版>
+
+### 快速使用
 
 在终端中执行：
 
@@ -34,10 +36,30 @@ user:
 最后运行 `auto_comment_plus.py` ：
 
 ```bash
-python auto_comment_plus.py
+python3 auto_comment_plus.py
 ```
 
-> 此脚本需要的依赖较多，需自行安装
+**注意:** 请根据设备环境换用不同的解释器路径，如 `python`、`py`。
+
+### 命令行参数
+
+本程序支持命令行参数：
+
+```text
+usage: auto_comment_plus.py [-h] [--dry-run]
+
+optional arguments:
+  -h, --help  show this help message and exit
+  --dry-run   have a full run without comment submission
+```
+
+**`-h`, `--help`:**
+
+显示帮助文本。
+
+**`--dry-run`:**
+
+完整地运行程序，但不实际提交评论。
 
 ## 声明
 
