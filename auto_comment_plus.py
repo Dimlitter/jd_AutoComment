@@ -4,6 +4,8 @@
 # @File : auto_comment_plus.py
 
 import argparse
+import logging
+import os
 import random
 import time
 
@@ -21,47 +23,6 @@ ORDINARY_SLEEP_SEC = 10
 SUNBW_SLEEP_SEC = 5
 REVIEW_SLEEP_SEC = 10
 SERVICE_RATING_SLEEP_SEC = 15
-
-
-# parse arguments
-parser = argparse.ArgumentParser()
-parser.add_argument('--dry-run',
-                    help='have a full run without comment submission',
-                    action='store_true')
-args = parser.parse_args()
-opts = {
-    'dry_run': args.dry_run
-}
-
-
-# logging
-jieba.setLogLevel(jieba.logging.INFO)
-
-
-# parse configurations
-with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
-    cfg = yaml.safe_load(f)
-ck = cfg['user']['cookie']
-
-headers = {
-    'cookie': ck,
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.82 Safari/537.36',
-    'Connection': 'keep-alive',
-    'Cache-Control': 'max-age=0',
-    'sec-ch-ua': '" Not A;Brand";v="99", "Chromium";v="98", "Google Chrome";v="98"',
-    'sec-ch-ua-mobile': '?0',
-    'sec-ch-ua-platform': '"Windows"',
-    'DNT': '1',
-    'Upgrade-Insecure-Requests': '1',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-    'Sec-Fetch-Site': 'same-site',
-    'Sec-Fetch-Mode': 'navigate',
-    'Sec-Fetch-User': '?1',
-    'Sec-Fetch-Dest': 'document',
-    'Referer': 'https://order.jd.com/',
-    'Accept-Encoding': 'gzip, deflate, br',
-    'Accept-Language': 'zh-CN,zh;q=0.9',
-}
 
 
 # 评价生成
@@ -356,6 +317,64 @@ def main(opts=None):
 
 
 if __name__ == '__main__':
+    # parse arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dry-run',
+                        help='have a full run without comment submission',
+                        action='store_true')
+    parser.add_argument('--log-level',
+                        help='specify logging level (default: info)',
+                        default='INFO')
+    args = parser.parse_args()
+    if args.log_level.upper() not in [
+        'DEBUG', 'WARN', 'INFO', 'ERROR', 'FATAL'
+        # NOTE: `WARN` is an alias of `WARNING`.
+        # NOTE: `FATAL` is an alias of `CRITICAL`.
+        # NOTE: Now there is no logging on `CRITICAL` level.
+    ]:
+        args.log_level = 'INFO'
+    else:
+        args.log_level = args.log_level.upper()
+    opts = {
+        'dry_run': args.dry_run,
+        'log_level': args.log_level
+    }
+
+    # logging on console
+    _logging_level = getattr(logging, opts['log_level'])
+    jieba.setLogLevel(_logging_level)
+    logger = logging.getLogger(__name__)
+    logger.setLevel(level=_logging_level)
+    formatter = logging.Formatter('[%(asctime)s %(levelname)s] %(message)s')
+    console = logging.StreamHandler()
+    console.setLevel(_logging_level)
+    console.setFormatter(formatter)
+
+    # parse configurations
+    with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
+        cfg = yaml.safe_load(f)
+    ck = cfg['user']['cookie']
+
+    headers = {
+        'cookie': ck,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.82 Safari/537.36',
+        'Connection': 'keep-alive',
+        'Cache-Control': 'max-age=0',
+        'sec-ch-ua': '" Not A;Brand";v="99", "Chromium";v="98", "Google Chrome";v="98"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+        'DNT': '1',
+        'Upgrade-Insecure-Requests': '1',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+        'Sec-Fetch-Site': 'same-site',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-User': '?1',
+        'Sec-Fetch-Dest': 'document',
+        'Referer': 'https://order.jd.com/',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Accept-Language': 'zh-CN,zh;q=0.9',
+    }
+
     try:
         main(opts)
     except RecursionError:
