@@ -153,11 +153,15 @@ def ordinary(N, opts=None):
 
     print(f"当前共有{N['待评价订单']}个评价。")
     for i, Order in enumerate(Order_data):
-        oid = Order.xpath('tr[@class="tr-th"]/td/span[3]/a/text()')[0]
-        oname_data = Order.xpath(
-            'tr[@class="tr-bd"]/td[1]/div[1]/div[2]/div/a/text()')
-        pid_data = Order.xpath(
-            'tr[@class="tr-bd"]/td[1]/div[1]/div[2]/div/a/@href')
+        try:
+            oid = Order.xpath('tr[@class="tr-th"]/td/span[3]/a/text()')[0]
+            oname_data = Order.xpath(
+                'tr[@class="tr-bd"]/td[1]/div[1]/div[2]/div/a/text()')
+            pid_data = Order.xpath(
+                'tr[@class="tr-bd"]/td[1]/div[1]/div[2]/div/a/@href')
+        except IndexError:
+            print(f"第{i + 1}个订单未查找到商品，跳过。")
+            continue
         for oname, pid in zip(oname_data, pid_data):
             pid = pid.replace('//item.jd.com/', '').replace('.html', '')
 
