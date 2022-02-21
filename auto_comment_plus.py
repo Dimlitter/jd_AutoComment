@@ -85,8 +85,14 @@ def generation(pname, _class=0, _type=1, opts=None):
     items = ['商品名']
     items.clear()
     items.append(pname)
-    for item in items:
+    opts['logger'].debug('Items: %s', items)
+    loop_times = len(items)
+    opts['logger'].debug('Total loop times: %d', loop_times)
+    for i, item in enumerate(items):
+        opts['logger'].debug('Loop: %d / %d', i + 1, loop_times)
+        opts['logger'].debug('Current item: %s', item)
         spider = jdspider.JDSpider(item)
+        opts['logger'].debug('Successfully created a JDSpider instance')
         # 增加对增值服务的评价鉴别
         if "赠品" in pname or "非实物" in pname or "增值服务" in pname:
             result = ["赠品挺好的。",
@@ -97,27 +103,30 @@ def generation(pname, _class=0, _type=1, opts=None):
                       ]
         else:
             result = spider.getData(4, 3)  # 这里可以自己改
+        opts['logger'].debug('Result: %s', result)
 
     # class 0是评价 1是提取id
     try:
         name = jieba.analyse.textrank(pname, topK=5, allowPOS='n')[0]
-    except Exception as _:
+        opts['logger'].debug('Name: %s', name)
+    except Exception as e:
+        opts['logger'].warning(
+            'jieba textrank analysis error: %s, name fallback to "宝贝"', e)
         name = "宝贝"
     if _class == 1:
+        opts['logger'].debug('_class is 1. Directly return name')
         return name
     else:
-        comments = ''
         if _type == 1:
             num = 6
         elif _type == 0:
             num = 4
-        if len(result) < num:
-            num = len(result)
-        else:
-            num = num
-        for i in range(num):
-            comments = comments + \
-                result.pop(random.randint(0, len(result) - 1))
+        num = min(num, len(result))
+        # use `.join()` to improve efficiency
+        comments = ''.join(random.sample(result, num))
+        opts['logger'].debug('_type: %d', _type)
+        opts['logger'].debug('num: %d', num)
+        opts['logger'].debug('Raw comments: %s', comments)
 
         return 5, comments.replace("$", name)
 
