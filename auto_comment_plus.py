@@ -222,14 +222,18 @@ def ordinary(N, opts=None):
     opts['logger'].info(f"当前共有{N['待评价订单']}个评价。")
     opts['logger'].debug('Commenting on items')
     for i, Order in enumerate(Order_data):
-        oid = Order.xpath('tr[@class="tr-th"]/td/span[3]/a/text()')[0]
-        opts['logger'].debug('oid: %s', oid)
-        oname_data = Order.xpath(
-            'tr[@class="tr-bd"]/td[1]/div[1]/div[2]/div/a/text()')
-        opts['logger'].debug('oname_data: %s', oname_data)
-        pid_data = Order.xpath(
-            'tr[@class="tr-bd"]/td[1]/div[1]/div[2]/div/a/@href')
-        opts['logger'].debug('pid_data: %s', pid_data)
+        try:
+            oid = Order.xpath('tr[@class="tr-th"]/td/span[3]/a/text()')[0]
+            opts['logger'].debug('oid: %s', oid)
+            oname_data = Order.xpath(
+                'tr[@class="tr-bd"]/td[1]/div[1]/div[2]/div/a/text()')
+            opts['logger'].debug('oname_data: %s', oname_data)
+            pid_data = Order.xpath(
+                'tr[@class="tr-bd"]/td[1]/div[1]/div[2]/div/a/@href')
+            opts['logger'].debug('pid_data: %s', pid_data)
+        except IndexError:
+            opts['logger'].warning(f"第{i + 1}个订单未查找到商品，跳过。")
+            continue
         loop_times1 = min(len(oname_data), len(pid_data))
         opts['logger'].debug('Commenting on orders')
         opts['logger'].debug('Total loop times: %d', loop_times1)
