@@ -7,6 +7,7 @@ import argparse
 import copy
 import logging
 import random
+import sys
 import time
 
 import jieba.analyse
@@ -571,6 +572,7 @@ if __name__ == '__main__':
     parser.add_argument('--log-level',
                         help='specify logging level (default: info)',
                         default='INFO')
+    parser.add_argument('-o', '--log-file', help='specify logging file')
     args = parser.parse_args()
     if args.log_level.upper() not in [
         'DEBUG', 'WARN', 'INFO', 'ERROR', 'FATAL'
@@ -586,6 +588,10 @@ if __name__ == '__main__':
         'dry_run': args.dry_run,
         'log_level': args.log_level
     }
+    if hasattr(args, 'log_file'):
+        opts['log_file'] = args.log_file
+    else:
+        opts['log_file'] = None
 
     # logging on console
     _logging_level = getattr(logging, opts['log_level'])
@@ -598,6 +604,7 @@ if __name__ == '__main__':
     # controling characters. When it comes to file logger, the number should
     # set to 8.
     formatter = StyleFormatter('%(asctime)s %(levelname)-19s %(message)s')
+    rawformatter = StyleFormatter('%(asctime)s %(levelname)-8s %(message)s', use_style=False)
     console = logging.StreamHandler()
     console.setLevel(_logging_level)
     console.setFormatter(formatter)
@@ -606,6 +613,18 @@ if __name__ == '__main__':
 
     logger.debug('Successfully set up console logger')
     logger.debug('CLI arguments: %s', args)
+    logger.debug('Opening the log file')
+    if opts['log_file']:
+        try:
+            handler = logging.FileHandler(opts['log_file'])
+        except Exception as e:
+            logger.error('Failed to open the file handler')
+            logger.error('Error message: %s', e)
+            sys.exit(1)
+        handler.setLevel(_logging_level)
+        handler.setFormatter(rawformatter)
+        logger.addHandler(handler)
+        logger.debug('Successfully set up file logger')
     logger.debug('Options passed to functions: %s', opts)
     logger.debug('Builtin constants:')
     logger.debug('  CONFIG_PATH: %s', CONFIG_PATH)
