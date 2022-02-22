@@ -246,7 +246,7 @@ def ordinary(N, opts=None):
             url2 = "https://club.jd.com/myJdcomments/saveProductComment.action"
             opts['logger'].debug('URL: %s', url2)
             xing, Str = generation(oname, opts=opts)
-            opts['logger'].info(f'\t\t评价内容,星级{xing}：', Str)
+            opts['logger'].info(f'\t\t评价内容,星级{xing}：' + Str)
             data2 = {
                 'orderId': oid,
                 'productId': pid,  # 商品id
@@ -260,7 +260,8 @@ def ordinary(N, opts=None):
                 opts['logger'].debug('Sending comment request')
                 pj2 = requests.post(url2, headers=headers, data=data2)
             else:
-                opts['logger'].debug('Skipped sending comment request in dry run')
+                opts['logger'].debug(
+                    'Skipped sending comment request in dry run')
             opts['logger'].debug('Sleep time (s): %.1f', ORDINARY_SLEEP_SEC)
             time.sleep(ORDINARY_SLEEP_SEC)
             idx += 1
@@ -519,7 +520,7 @@ def Service_rating(N, opts=None):
             pj1 = requests.post(url1, headers=headers, data=data1)
         else:
             opts['logger'].debug('Skipped sending comment request in dry run')
-        opts['logger'].info("\t\t", pj1.text)
+        opts['logger'].info("\t\t " + pj1.text)
         opts['logger'].debug('Sleep time (s): %.1f', SERVICE_RATING_SLEEP_SEC)
         time.sleep(SERVICE_RATING_SLEEP_SEC)
         N['服务评价'] -= 1
@@ -530,8 +531,8 @@ def No(opts=None):
     opts = opts or {}
     opts['logger'].info('')
     N = all_evaluate(opts)
-    for i in N:
-        opts['logger'].info('{} {}----'.format(i, N[i]))
+    s = '----'.join(['{} {}'.format(i, N[i]) for i in N])
+    opts['logger'].info(s)
     opts['logger'].info('')
     return N
 
