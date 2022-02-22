@@ -6,6 +6,7 @@
 import argparse
 import copy
 import logging
+import os
 import random
 import sys
 import time
@@ -20,6 +21,7 @@ import jdspider
 
 # constants
 CONFIG_PATH = './config.yml'
+USER_CONFIG_PATH = './config.user.yml'
 ORDINARY_SLEEP_SEC = 10
 SUNBW_SLEEP_SEC = 5
 REVIEW_SLEEP_SEC = 10
@@ -641,6 +643,7 @@ if __name__ == '__main__':
     logger.debug('Options passed to functions: %s', opts)
     logger.debug('Builtin constants:')
     logger.debug('  CONFIG_PATH: %s', CONFIG_PATH)
+    logger.debug('  USER_CONFIG_PATH: %s', USER_CONFIG_PATH)
     logger.debug('  ORDINARY_SLEEP_SEC: %s', ORDINARY_SLEEP_SEC)
     logger.debug('  SUNBW_SLEEP_SEC: %s', SUNBW_SLEEP_SEC)
     logger.debug('  REVIEW_SLEEP_SEC: %s', REVIEW_SLEEP_SEC)
@@ -648,7 +651,13 @@ if __name__ == '__main__':
 
     # parse configurations
     logger.debug('Reading the configuration file')
-    with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
+    if os.path.exists(USER_CONFIG_PATH):
+        logger.debug('User configuration file exists')
+        _cfg_path = USER_CONFIG_PATH
+    else:
+        logger.debug('User configuration file doesn\'t exist, fallback to the default one')
+        _cfg_path = CONFIG_PATH
+    with open(_cfg_path, 'r', encoding='utf-8') as f:
         cfg = yaml.safe_load(f)
     logger.debug('Closed the configuration file')
     logger.debug('Configurations in Python-dict format: %s', cfg)
