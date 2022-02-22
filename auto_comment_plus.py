@@ -25,22 +25,50 @@ with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
 ck = cfg['user']['cookie']
 
 headers = {
-    'cookie': ck,
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/'
-                  '537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/'
-                  '537.36'
-}
+        'cookie': ck,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.82 Safari/537.36',
+        'Connection': 'keep-alive',
+        'Cache-Control': 'max-age=0',
+        'sec-ch-ua': '" Not A;Brand";v="99", "Chromium";v="98", "Google Chrome";v="98"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+        'DNT': '1',
+        'Upgrade-Insecure-Requests': '1',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+        'Sec-Fetch-Site': 'same-site',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-User': '?1',
+        'Sec-Fetch-Dest': 'document',
+        'Referer': 'https://order.jd.com/',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Accept-Language': 'zh-CN,zh;q=0.9',
+    }
 
 
 # 评价生成
-def generation(pname, _class=0):
-    list = ['商品名']
-    list.clear()
-    list.append(pname)
-    for item in list:
-        spider = jdspider.JDSpider(item)
-        result = spider.getData(4, 3) #这里可以自己改
-
+def generation(pname, _class=0,_type=1):
+    items = ['商品名']
+    items.clear()
+    items.append(pname)
+    for item in items:
+        if "赠品" in pname or "非实物" in pname or "增值服务" in pname:
+            result = [
+                "赠品挺好的。",
+                "很贴心，能有这样免费赠送的赠品!",
+                "正好想着要不要多买一份增值服务，没想到还有这样的赠品。",
+                "赠品正合我意。",
+                "赠品很好，挺不错的。",
+                "本来买了产品以后还有些担心。但是看到赠品以后就放心了。",
+                "不论品质如何，至少说明店家对客的态度很好！",
+                "我很喜欢这些商品！",
+                "我对于商品的附加值很在乎，恰好这些赠品为这件商品提供了这样的的附加值，这令我很满意。"
+                "感觉现在的网购环境环境越来越好了，以前网购的时候还没有过么多贴心的赠品和增值服务",
+                "第一次用京东，被这种赠品和增值服物的良好态度感动到了。",
+                "赠品还行。"
+            ]
+        else:
+            spider = jdspider.JDSpider(item)
+            result = spider.getData(4, 3)  # 这里可以自己改
     # class 0是评价 1是提取id
     try:
         name = jieba.analyse.textrank(pname, topK=5, allowPOS='n')[0]
@@ -50,14 +78,14 @@ def generation(pname, _class=0):
         return name
     else:
         comments = ''
-        if len(result) > 8 :
-            for i in range(8):
-                comments = comments + result.pop()
-        else:
-            for i in range(len(result)):
-                comments = comments + result.pop()
-            return 5, (
-                comments.replace("$", name))
+        if _type == 1:
+            num = 6
+        elif _type == 0:
+            num = 4
+        num = min(num, len(result))
+        for i in range(num):
+            comments = comments + result.pop(random.randint(0, num-1))
+    return 5, (comments.replace("$", name))
 
 
 # 查询全部评价
@@ -96,11 +124,15 @@ def ordinary(N):
 
     print(f"当前共有{N['待评价订单']}个评价。")
     for i, Order in enumerate(Order_data):
-        oid = Order.xpath('tr[@class="tr-th"]/td/span[3]/a/text()')[0]
-        oname_data = Order.xpath(
-            'tr[@class="tr-bd"]/td[1]/div[1]/div[2]/div/a/text()')
-        pid_data = Order.xpath(
-            'tr[@class="tr-bd"]/td[1]/div[1]/div[2]/div/a/@href')
+        try:
+            oid = Order.xpath('tr[@class="tr-th"]/td/span[3]/a/text()')[0]
+            oname_data = Order.xpath(
+                'tr[@class="tr-bd"]/td[1]/div[1]/div[2]/div/a/text()')
+            pid_data = Order.xpath(
+                'tr[@class="tr-bd"]/td[1]/div[1]/div[2]/div/a/@href')
+        except IndexError:
+            print(f"第{i + 1}个订单没有商品，跳过。")
+            continue
         for oname, pid in zip(oname_data, pid_data):
             pid = pid.replace('//item.jd.com/', '').replace('.html', '')
 
@@ -140,7 +172,6 @@ def sunbw(N):
 
         print(f'\t开始晒单{i},{oname}')
         # 获取图片
-        pname = generation(pname=oname, _class=1)
         url1 = (f'https://club.jd.com/discussion/getProductPageImageCommentList'
                 f'.action?productId={pid}')
         imgdata = requests.get(url1, headers=headers).json()
@@ -164,13 +195,8 @@ def sunbw(N):
             'imgs': imgurl,
             'saveStatus': 3
         }
-        req_url2 = requests.post(url2, data={
-            'orderId': oid,
-            'productId': pid,
-            'imgs': imgurl,
-            'saveStatus': 3
-        }, headers=headers)
-        print('完成')
+        req_url2 = requests.post(url2, data=data, headers=headers)
+        print('评价成功！')
         time.sleep(5)
         N['待晒单'] -= 1
     return N
@@ -202,7 +228,7 @@ def review(N):
         pid, oid = _id.replace(
             'http://club.jd.com/afterComments/productPublish.action?sku=',
             "").split('&orderId=')
-        context = generation(oname)
+        _ , context = generation(oname, _type=0)
         print(f'\t\t追评内容：{context}')
         req_url1 = requests.post(url1, headers=headers, data={
             'orderId': oid,

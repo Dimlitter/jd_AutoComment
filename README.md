@@ -1,5 +1,5 @@
 # jd_AutoComment
-
+# 本分支为stable分支，功能基本可用，但更新可能不及时，请自行选择
 ## 鸣谢
 感谢[qiu-lzsnmb](https://github.com/qiu-lzsnmb)大佬的脚本和[Zhang Jiale](https://github.com/2274900)大佬的评论爬虫
 
@@ -22,7 +22,24 @@ cd jd_AutoComment
 pip install -r requirements.txt
 ```
 
-然后获取电脑版ck后填入 auto_comment_plus.py 文件，运行此文件即可
+获取电脑版ck后填入配置文件 `config.yml` 
+
+需要填入如下内容：
+
+```yml
+user:
+  cookie: '<Cookie>'
+```
+
+最后运行 `auto_comment_plus.py` ：
+
+```bash
+python3 auto_comment_plus.py
+```
+
+**注意:** 请根据设备环境换用不同的解释器路径，如 `python`、`py`。
+
+**另外**：此分支版本不支持命令行参数，开发者请选择 `main分支`
 
 > 此脚本需要的依赖较多，需自行安装
 

@@ -178,7 +178,7 @@ class JDSpider:
 
 # 测试用例
 if __name__ == "__main__":
-    list = ['商品名']
-    for item in list:
+    items = ['商品名']
+    for item in items:
         spider = JDSpider(item)
         spider.getData(2, 3)
