@@ -6,6 +6,7 @@
 import argparse
 import copy
 import logging
+import os
 import random
 import sys
 import time
@@ -20,6 +21,7 @@ import jdspider
 
 # constants
 CONFIG_PATH = './config.yml'
+USER_CONFIG_PATH = './config.user.yml'
 ORDINARY_SLEEP_SEC = 10
 SUNBW_SLEEP_SEC = 5
 REVIEW_SLEEP_SEC = 10
@@ -246,7 +248,7 @@ def ordinary(N, opts=None):
             url2 = "https://club.jd.com/myJdcomments/saveProductComment.action"
             opts['logger'].debug('URL: %s', url2)
             xing, Str = generation(oname, opts=opts)
-            opts['logger'].info(f'\t\t评价内容,星级{xing}：', Str)
+            opts['logger'].info(f'\t\t评价内容,星级{xing}：' + Str)
             data2 = {
                 'orderId': oid,
                 'productId': pid,  # 商品id
@@ -260,7 +262,8 @@ def ordinary(N, opts=None):
                 opts['logger'].debug('Sending comment request')
                 pj2 = requests.post(url2, headers=headers, data=data2)
             else:
-                opts['logger'].debug('Skipped sending comment request in dry run')
+                opts['logger'].debug(
+                    'Skipped sending comment request in dry run')
             opts['logger'].debug('Sleep time (s): %.1f', ORDINARY_SLEEP_SEC)
             time.sleep(ORDINARY_SLEEP_SEC)
             idx += 1
@@ -519,7 +522,7 @@ def Service_rating(N, opts=None):
             pj1 = requests.post(url1, headers=headers, data=data1)
         else:
             opts['logger'].debug('Skipped sending comment request in dry run')
-        opts['logger'].info("\t\t", pj1.text)
+        opts['logger'].info("\t\t " + pj1.text)
         opts['logger'].debug('Sleep time (s): %.1f', SERVICE_RATING_SLEEP_SEC)
         time.sleep(SERVICE_RATING_SLEEP_SEC)
         N['服务评价'] -= 1
@@ -530,8 +533,8 @@ def No(opts=None):
     opts = opts or {}
     opts['logger'].info('')
     N = all_evaluate(opts)
-    for i in N:
-        opts['logger'].info('{} {}----'.format(i, N[i]))
+    s = '----'.join(['{} {}'.format(i, N[i]) for i in N])
+    opts['logger'].info(s)
     opts['logger'].info('')
     return N
 
@@ -640,6 +643,7 @@ if __name__ == '__main__':
     logger.debug('Options passed to functions: %s', opts)
     logger.debug('Builtin constants:')
     logger.debug('  CONFIG_PATH: %s', CONFIG_PATH)
+    logger.debug('  USER_CONFIG_PATH: %s', USER_CONFIG_PATH)
     logger.debug('  ORDINARY_SLEEP_SEC: %s', ORDINARY_SLEEP_SEC)
     logger.debug('  SUNBW_SLEEP_SEC: %s', SUNBW_SLEEP_SEC)
     logger.debug('  REVIEW_SLEEP_SEC: %s', REVIEW_SLEEP_SEC)
@@ -647,7 +651,13 @@ if __name__ == '__main__':
 
     # parse configurations
     logger.debug('Reading the configuration file')
-    with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
+    if os.path.exists(USER_CONFIG_PATH):
+        logger.debug('User configuration file exists')
+        _cfg_path = USER_CONFIG_PATH
+    else:
+        logger.debug('User configuration file doesn\'t exist, fallback to the default one')
+        _cfg_path = CONFIG_PATH
+    with open(_cfg_path, 'r', encoding='utf-8') as f:
         cfg = yaml.safe_load(f)
     logger.debug('Closed the configuration file')
     logger.debug('Configurations in Python-dict format: %s', cfg)
