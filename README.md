@@ -36,11 +36,20 @@ cd jd_AutoComment
 pip install -r requirements.txt
 ```
 
-获取电脑版ck后填入 `config.yml` 文件：
+获取电脑版ck后填入配置文件。可以选择填入默认配置文件 `config.yml` ；也可以填入用户配置文件 `config.user.yml` （需要新建后将 `config.yml` 中的内容复制到该文件中），避免后续的更新覆盖 `config.yml` 中的内容。
+
+需要填入如下内容：
 
 ```yml
 user:
-  cookie: ''
+  cookie: '<Cookie>'
+```
+
+例如，若获取得到的ck为 `a=1; b=2; c=3` ，则配置文件中填入：
+
+```yml
+user:
+  cookie: 'a=1; b=2; c=3'
 ```
 
 最后运行 `auto_comment_plus.py` ：
@@ -56,11 +65,15 @@ python3 auto_comment_plus.py
 本程序支持命令行参数：
 
 ```text
-usage: auto_comment_plus.py [-h] [--dry-run]
+usage: auto_comment_plus.py [-h] [--dry-run] [--log-level LOG_LEVEL] [-o LOG_FILE]
 
 optional arguments:
-  -h, --help  show this help message and exit
-  --dry-run   have a full run without comment submission
+  -h, --help            show this help message and exit
+  --dry-run             have a full run without comment submission
+  --log-level LOG_LEVEL
+                        specify logging level (default: info)
+  -o LOG_FILE, --log-file LOG_FILE
+                        specify logging file
 ```
 
 **`-h`, `--help`:**
@@ -70,6 +83,16 @@ optional arguments:
 **`--dry-run`:**
 
 完整地运行程序，但不实际提交评论。
+
+**`--log-level LOG_LEVEL`:**
+
+设置输出日志的等级。默认为 `INFO` 。可选等级为 `DEBUG`、`INFO`、`WARNING`、`ERROR` ，输出内容量依次递减。
+
+**注意:** 若你需要提交 issue 来报告一个 bug ，请将该选项设置为 `DEBUG` 。
+
+**`-o LOG_FILE`:**
+
+设置输出日志文件的路径。若无此选项，则不输出到文件。
 
 ## 声明
 
