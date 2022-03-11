@@ -629,6 +629,10 @@ if __name__ == '__main__':
     jieba.default_logger = logging.getLogger('jieba')
     jieba.default_logger.setLevel(level=_logging_level)
     jieba.default_logger.addHandler(console)
+    # It's another hack!!!
+    jdspider.default_logger = logging.getLogger('spider')
+    jdspider.default_logger.setLevel(level=_logging_level)
+    jdspider.default_logger.addHandler(console)
 
     logger.debug('Successfully set up console logger')
     logger.debug('CLI arguments: %s', args)
@@ -644,6 +648,7 @@ if __name__ == '__main__':
         handler.setFormatter(rawformatter)
         logger.addHandler(handler)
         jieba.default_logger.addHandler(handler)
+        jdspider.default_logger.addHandler(handler)
         logger.debug('Successfully set up file logger')
     logger.debug('Options passed to functions: %s', opts)
     logger.debug('Builtin constants:')
