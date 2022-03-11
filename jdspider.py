@@ -6,12 +6,20 @@ import json
 import logging
 import random
 import re
+import sys
 import time
 from urllib.parse import quote, urlencode
 
 import requests
 import zhon.hanzi
 from lxml import etree
+
+
+# Reference: https://github.com/fxsjy/jieba/blob/1e20c89b66f56c9301b0feed211733ffaa1bd72a/jieba/__init__.py#L27
+log_console = logging.StreamHandler(sys.stderr)
+default_logger = logging.getLogger('jdspider')
+default_logger.setLevel(logging.DEBUG)
+default_logger.addHandler(log_console)
 
 
 class JDSpider:
@@ -67,7 +75,7 @@ class JDSpider:
     def getId(self):  # 获取商品id，为了得到具体商品页面的网址。结果保存在self.productId的数组里
         response = requests.get(self.startUrl, headers=self.headers)
         if response.status_code != 200:
-            logging.warning("状态码错误，爬虫连接异常！")
+            default_logger.warning("状态码错误，爬虫连接异常！")
         html = etree.HTML(response.text)
         return html.xpath('//li[@class="gl-item"]/@data-sku')
 
@@ -86,48 +94,48 @@ class JDSpider:
             header = self.getHeaders(id)
             for i in range(1, maxPage):
                 param, url = self.getParamUrl(id, i, score)
-                print("正在爬取评论信息>>>>>>>>>第：%d 个，第 %d 页" % (j, i))
+                default_logger.info("正在爬取评论信息>>>>>>>>>第：%d 个，第 %d 页" % (j, i))
                 try:
                     response = requests.get(url, headers=header, params=param)
                 except Exception as e:
-                    logging.warning(e)
+                    default_logger.warning(e)
                     break
                 if response.status_code != 200:
-                    logging.warning("状态码错误，爬虫连接异常")
+                    default_logger.warning("状态码错误，爬虫连接异常")
                     continue
                 time.sleep(random.randint(5, 10))  # 设置时延，防止被封IP
                 if response.text == '':
-                    logging.warning("未爬取到信息")
+                    default_logger.warning("未爬取到信息")
                     continue
                 try:
                     res_json = json.loads(response.text)
                 except Exception as e:
-                    logging.warning(e)
+                    default_logger.warning(e)
                     continue
                 if len((res_json['comments'])) == 0:
-                    logging.warning("页面次数已到：%d,超出范围" % (i))
+                    default_logger.warning("页面次数已到：%d,超出范围" % (i))
                     break
-                logging.info("正在爬取%s %s 第 %d" %
-                             (self.categlory, self.comtype[score], i))
+                default_logger.info("正在爬取%s %s 第 %d" %
+                                    (self.categlory, self.comtype[score], i))
                 for cdit in res_json['comments']:
                     comment = cdit['content'].replace(
                         "\n", ' ').replace('\r', ' ')
                     comments.append(comment)
                     scores.append(cdit['score'])
         # savepath = './'+self.categlory+'_'+self.comtype[score]+'.csv'
-        logging.warning("已爬取%d 条 %s 评价信息" %
-                        (len(comments), self.comtype[score]))
+        default_logger.warning("已爬取%d 条 %s 评价信息" %
+                               (len(comments), self.comtype[score]))
         # 存入列表,简单处理评价
         remarks = []
         for i in range(len(comments)):
             rst = re.findall(zhon.hanzi.sentence, comments[i])
             if len(rst) == 0 or rst == ['。'] or rst == ['？'] or rst == ['！'] or rst == ['.'] or rst == [','] or rst == ['?'] or rst == ['!']:
-                logging.warning("拆分失败或结果不符(去除空格和标点符号)：%s" % (rst))
+                default_logger.warning("拆分失败或结果不符(去除空格和标点符号)：%s" % (rst))
             else:
                 remarks.append(rst)
         result = self.solvedata(remarks=remarks)
         if len(result) == 0:
-            logging.warning("当前商品没有评价,使用默认评价")
+            default_logger.warning("当前商品没有评价,使用默认评价")
             result = ["考虑买这个$之前我是有担心过的，因为我不知道$的质量和品质怎么样，但是看了评论后我就放心了。",
                       "买这个$之前我是有看过好几家店，最后看到这家店的评价不错就决定在这家店买 ",
                       "看了好几家店，也对比了好几家店，最后发现还是这一家的$评价最好。",
@@ -155,7 +163,7 @@ class JDSpider:
         for i in range(len(remarks)):
             for j in range(len(remarks[i])):
                 sentences.append(remarks[i][j])
-        print("爬取的评价结果：" + str(sentences))
+        default_logger.info("爬取的评价结果：" + str(sentences))
         return sentences
 
         # 存入mysql数据库
