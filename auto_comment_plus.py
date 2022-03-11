@@ -11,6 +11,7 @@ import random
 import sys
 import time
 
+import jieba  # just for linting
 import jieba.analyse
 import requests
 import yaml
@@ -610,7 +611,6 @@ if __name__ == '__main__':
 
     # logging on console
     _logging_level = getattr(logging, opts['log_level'])
-    jieba.setLogLevel(_logging_level)
     logger = logging.getLogger(__name__)
     logger.setLevel(level=_logging_level)
     # NOTE: `%(levelname)s` will be parsed as the original name (`FATAL` ->
@@ -625,6 +625,9 @@ if __name__ == '__main__':
     console.setFormatter(formatter)
     logger.addHandler(console)
     opts['logger'] = logger
+    # It's a hack!
+    jieba.default_logger = logger
+    jieba.default_logger.name = 'jieba'
 
     logger.debug('Successfully set up console logger')
     logger.debug('CLI arguments: %s', args)
