@@ -611,7 +611,7 @@ if __name__ == '__main__':
 
     # logging on console
     _logging_level = getattr(logging, opts['log_level'])
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger('comment')
     logger.setLevel(level=_logging_level)
     # NOTE: `%(levelname)s` will be parsed as the original name (`FATAL` ->
     # `CRITICAL`, `WARN` -> `WARNING`).
@@ -625,9 +625,10 @@ if __name__ == '__main__':
     console.setFormatter(formatter)
     logger.addHandler(console)
     opts['logger'] = logger
-    # It's a hack!
-    jieba.default_logger = logger
-    jieba.default_logger.name = 'jieba'
+    # It's a hack!!!
+    jieba.default_logger = logging.getLogger('jieba')
+    jieba.default_logger.setLevel(level=_logging_level)
+    jieba.default_logger.addHandler(console)
 
     logger.debug('Successfully set up console logger')
     logger.debug('CLI arguments: %s', args)
@@ -642,6 +643,7 @@ if __name__ == '__main__':
         handler.setLevel(_logging_level)
         handler.setFormatter(rawformatter)
         logger.addHandler(handler)
+        jieba.default_logger.addHandler(handler)
         logger.debug('Successfully set up file logger')
     logger.debug('Options passed to functions: %s', opts)
     logger.debug('Builtin constants:')
