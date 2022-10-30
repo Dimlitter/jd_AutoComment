@@ -271,7 +271,7 @@ def ordinary(N, opts=None):
     N['待评价订单'] -= 1
     return N
 
-
+'''
 # 晒单评价
 def sunbw(N, opts=None):
     opts = opts or {}
@@ -367,7 +367,7 @@ def sunbw(N, opts=None):
         time.sleep(SUNBW_SLEEP_SEC)
         N['待晒单'] -= 1
     return N
-
+'''
 
 # 追评
 def review(N, opts=None):
@@ -548,18 +548,21 @@ def main(opts=None):
     if not N:
         opts['logger'].error('Ck出现错误，请重新抓取！')
         exit()
+    opts['logger'].info(f"已评价：{N['已评价']}个")
     if N['待评价订单'] != 0:
         opts['logger'].info("1.开始普通评价")
         N = ordinary(N, opts)
         opts['logger'].debug('N value after executing ordinary(): %s', N)
         N = No(opts)
         opts['logger'].debug('N value after executing No(): %s', N)
+    ''' "待晒单" is no longer found in N{} instead of "已评价"
     if N['待晒单'] != 0:
         opts['logger'].info("2.开始晒单评价")
         N = sunbw(N, opts)
         opts['logger'].debug('N value after executing sunbw(): %s', N)
         N = No(opts)
         opts['logger'].debug('N value after executing No(): %s', N)
+    '''
     if N['待追评'] != 0:
         opts['logger'].info("3.开始批量追评！")
         N = review(N, opts)
