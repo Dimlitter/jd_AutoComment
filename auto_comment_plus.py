@@ -675,6 +675,7 @@ if __name__ == '__main__':
     logger.debug('Closed the configuration file')
     logger.debug('Configurations in Python-dict format: %s', cfg)
     ck = cfg['user']['cookie']
+    jdspider.cookie = ck.encode("utf-8")
 
     headers = {
         'cookie': ck.encode("utf-8"),

@@ -16,6 +16,7 @@ from lxml import etree
 
 
 # Reference: https://github.com/fxsjy/jieba/blob/1e20c89b66f56c9301b0feed211733ffaa1bd72a/jieba/__init__.py#L27
+cookie = ""
 log_console = logging.StreamHandler(sys.stderr)
 default_logger = logging.getLogger('jdspider')
 default_logger.setLevel(logging.DEBUG)
@@ -68,7 +69,8 @@ class JDSpider:
 
     def getHeaders(self, productid):  # 和初始的self.header不同，这是爬取某个商品的header，加入了商品id，我也不知道去掉了会怎样。
         header = {"Referer": "https://item.jd.com/%s.html" % (productid),
-                  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36"
+                  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36",
+                  "cookie" : cookie
                   }
         return header
 
