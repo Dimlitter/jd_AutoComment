@@ -87,16 +87,17 @@ class JDSpider:
 
         comments = []
         scores = []
-        if len(self.productsId) < 10:  # limit the sum of products
+        default_logger.info('爬取商品数量最多为8个,请耐心等待,也可以自行修改jdspider文件')
+        if len(self.productsId) < 8:  # limit the sum of products
             sum = len(self.productsId)
         else:
-            sum = 10
+            sum = 8
         for j in range(sum):
             id = self.productsId[j]
             header = self.getHeaders(id)
             for i in range(1, maxPage):
                 param, url = self.getParamUrl(id, i, score)
-                default_logger.info("正在爬取评论信息>>>>>>>>>第：%d 个，第 %d 页" % (j, i))
+                default_logger.info(f"正在爬取当前商品的评论信息>>>>>>>>>第：%d 个，第 %d 页" % (j, i))
                 try:
                     response = requests.get(url, headers=header, params=param)
                 except Exception as e:
@@ -115,10 +116,8 @@ class JDSpider:
                     default_logger.warning(e)
                     continue
                 if len((res_json['comments'])) == 0:
-                    default_logger.warning("页面次数已到：%d,超出范围" % (i))
+                    default_logger.warning("页面次数已到：%d,超出范围(或未爬取到评论)" % (i))
                     break
-                default_logger.info("正在爬取%s %s 第 %d" %
-                                    (self.categlory, self.comtype[score], i))
                 for cdit in res_json['comments']:
                     comment = cdit['content'].replace(
                         "\n", ' ').replace('\r', ' ')

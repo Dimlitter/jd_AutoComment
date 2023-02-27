@@ -171,7 +171,7 @@ def all_evaluate(opts=None):
             num = ev.xpath('b/text()')[0]
             opts['logger'].debug('num: %s', num)
         except IndexError:
-            opts['logger'].warning(
+            opts['logger'].info(
                 'Can\'t find num content in XPath, fallback to 0')
             num = 0
         N[na] = int(num)
@@ -245,18 +245,55 @@ def ordinary(N, opts=None):
             opts['logger'].debug('Loop: %d / %d', idx + 1, loop_times1)
             pid = pid.replace('//item.jd.com/', '').replace('.html', '')
             opts['logger'].debug('pid: %s', pid)
-            opts['logger'].info(f"\t{i}.开始评价订单\t{oname}[{oid}]")
+            opts['logger'].info(f"\t{i}.开始评价订单\t{oname}[{oid}]并晒图")
             url2 = "https://club.jd.com/myJdcomments/saveProductComment.action"
             opts['logger'].debug('URL: %s', url2)
             xing, Str = generation(oname, opts=opts)
             opts['logger'].info(f'\t\t评价内容,星级{xing}：' + Str)
+
+            #获取图片
+            opts['logger'].info(f'\t\t开始获取图片')
+            url1 = (f'https://club.jd.com/discussion/getProductPageImageCommentList'
+                    f'.action?productId={pid}')
+            opts['logger'].debug('Fetching images using the default URL')
+            opts['logger'].debug('URL: %s', url1)
+            req1 = requests.get(url1, headers=headers)
+            opts['logger'].debug(
+                'Successfully accepted the response with status code %d',
+                req1.status_code)
+            if not req.ok:
+                opts['logger'].warning(
+                    'Status code of the response is %d, not 200', req1.status_code)
+            imgdata = req1.json()
+            opts['logger'].debug('Image data: %s', imgdata)
+            if imgdata["imgComments"]["imgCommentCount"] == 0:
+                opts['logger'].debug('Count of fetched image comments is 0')
+                opts['logger'].debug('Fetching images using another URL')
+                url1 = ('https://club.jd.com/discussion/getProductPageImage'
+                        'CommentList.action?productId=1190881')
+                opts['logger'].debug('URL: %s', url1)
+                req1 = requests.get(url1, headers=headers)
+                opts['logger'].debug(
+                    'Successfully accepted the response with status code %d',
+                    req1.status_code)
+                if not req.ok:
+                    opts['logger'].warning(
+                        'Status code of the response is %d, not 200',
+                        req1.status_code)
+                imgdata = req1.json()
+                opts['logger'].debug('Image data: %s', imgdata)
+            imgurl = imgdata["imgComments"]["imgList"][0]["imageUrl"]
+            opts['logger'].debug('Image URL: %s', imgurl)
+            opts['logger'].info(f'\t\t图片url={imgurl}')
+
             data2 = {
                 'orderId': oid,
                 'productId': pid,  # 商品id
                 'score': str(xing),  # 商品几星
                 'content': bytes(Str, encoding="gbk"),  # 评价内容
                 'saveStatus': '1',
-                'anonymousFlag': '1'
+                'anonymousFlag': '1', # 是否匿名
+                'imgs': imgurl,  # 图片url
             }
             opts['logger'].debug('Data: %s', data2)
             if not opts.get('dry_run'):
@@ -265,6 +302,7 @@ def ordinary(N, opts=None):
             else:
                 opts['logger'].debug(
                     'Skipped sending comment request in dry run')
+            opts['logger'].info(f"\t{i}.评价订单\t{oname}[{oid}]并晒图成功")
             opts['logger'].debug('Sleep time (s): %.1f', ORDINARY_SLEEP_SEC)
             time.sleep(ORDINARY_SLEEP_SEC)
             idx += 1
@@ -499,7 +537,11 @@ def Service_rating(N, opts=None):
     opts['logger'].debug('Commenting on items')
     for i, Order in enumerate(Order_data):
         oname = Order.xpath('td[1]/div[1]/div[2]/div/a/text()')[0]
-        oid = Order.xpath('td[4]/div/a[1]/@oid')[0]
+        try:
+            oid = Order.xpath('td[4]/div/a[1]/@oid')[0]
+        except IndexError:
+            opts['logger'].warning('Failed to fetch oid')
+            continue
         opts['logger'].info(f'\t开始第{i+1}，{oname}')
         opts['logger'].debug('oid: %s', oid)
         url1 = (f'https://club.jd.com/myJdcomments/insertRestSurvey.action'
@@ -564,7 +606,7 @@ def main(opts=None):
         opts['logger'].debug('N value after executing No(): %s', N)
     '''
     if N['待追评'] != 0:
-        opts['logger'].info("3.开始批量追评！")
+        opts['logger'].info("3.开始批量追评,注意：追评不会自动上传图片")
         N = review(N, opts)
         opts['logger'].debug('N value after executing review(): %s', N)
         N = No(opts)
