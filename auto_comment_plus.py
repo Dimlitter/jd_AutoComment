@@ -4,7 +4,7 @@
 # @File : auto_comment_plus.py
 
 import argparse
-import copy
+import copy,urllib
 import logging
 import os
 import random
@@ -285,12 +285,12 @@ def ordinary(N, opts=None):
             imgurl = imgdata["imgComments"]["imgList"][0]["imageUrl"]
             opts['logger'].debug('Image URL: %s', imgurl)
             opts['logger'].info(f'\t\t图片url={imgurl}')
-
+            Str:str = urllib.parse.quote(Str, safe='/', encoding=None, errors=None)
             data2 = {
                 'orderId': oid,
                 'productId': pid,  # 商品id
                 'score': str(xing),  # 商品几星
-                'content': bytes(Str, encoding="gbk"),  # 评价内容
+                'content': Str.replace('%','%25'),  # 评价内容
                 'saveStatus': '1',
                 'anonymousFlag': '1', # 是否匿名
                 'imgs': imgurl,  # 图片url
@@ -469,17 +469,18 @@ def review(N, opts=None):
         opts['logger'].debug('oid: %s', oid)
         _, context = generation(oname, _type=0, opts=opts)
         opts['logger'].info(f'\t\t追评内容：{context}')
+        context = urllib.parse.quote(context, safe='/', encoding=None, errors=None)
         data1 = {
             'orderId': oid,
             'productId': pid,
-            'content': bytes(context, encoding="gbk"),
+            'content': context.replace('%','%25'),
             'anonymousFlag': 1,
             'score': 5
         }
         opts['logger'].debug('Data: %s', data1)
         if not opts.get('dry_run'):
             opts['logger'].debug('Sending comment request')
-            req_url1 = requests.post(url1, headers=headers, data=data1)
+            requests.post(url1, headers=headers, data=data1)
         else:
             opts['logger'].debug('Skipped sending comment request in dry run')
         opts['logger'].info('完成')
