@@ -131,3 +131,4 @@ dmypy.json
 # user config
 config.user.yml
 .idea/
+.vscode/

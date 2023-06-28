@@ -4,7 +4,8 @@
 # @File : auto_comment_plus.py
 
 import argparse
-import copy,urllib
+import copy
+import urllib
 import logging
 import os
 import random
@@ -28,8 +29,8 @@ SUNBW_SLEEP_SEC = 5
 REVIEW_SLEEP_SEC = 10
 SERVICE_RATING_SLEEP_SEC = 15
 
-## logging with styles
-## Reference: https://stackoverflow.com/a/384125/12002560
+# logging with styles
+# Reference: https://stackoverflow.com/a/384125/12002560
 _COLORS = {
     'black': 0,
     'red': 1,
@@ -55,6 +56,7 @@ _FORMATTER_COLORS = {
     'CRITICAL': _COLORS['red']
 }
 
+
 def format_style_seqs(msg, use_style=True):
     if use_style:
         msg = msg.replace('$RESET', _RESET_SEQ)
@@ -66,6 +68,7 @@ def format_style_seqs(msg, use_style=True):
         msg = msg.replace('$BOLD', '')
         msg = msg.replace('$ITALIC', '')
         msg = msg.replace('$UNDERLINED', '')
+
 
 class StyleFormatter(logging.Formatter):
     def __init__(self, fmt=None, datefmt=None, use_style=True):
@@ -251,7 +254,7 @@ def ordinary(N, opts=None):
             xing, Str = generation(oname, opts=opts)
             opts['logger'].info(f'\t\t评价内容,星级{xing}：' + Str)
 
-            #获取图片
+            # 获取图片
             opts['logger'].info(f'\t\t开始获取图片')
             url1 = (f'https://club.jd.com/discussion/getProductPageImageCommentList'
                     f'.action?productId={pid}')
@@ -285,14 +288,15 @@ def ordinary(N, opts=None):
             imgurl = imgdata["imgComments"]["imgList"][0]["imageUrl"]
             opts['logger'].debug('Image URL: %s', imgurl)
             opts['logger'].info(f'\t\t图片url={imgurl}')
-            Str:str = urllib.parse.quote(Str, safe='/', encoding=None, errors=None)
+            Str: str = urllib.parse.quote(
+                Str, safe='/', encoding=None, errors=None)
             data2 = {
                 'orderId': oid,
                 'productId': pid,  # 商品id
                 'score': str(xing),  # 商品几星
-                'content': Str.replace('%','%25'),  # 评价内容
+                'content': Str,  # 评价内容
                 'saveStatus': '1',
-                'anonymousFlag': '1', # 是否匿名
+                'anonymousFlag': '1',  # 是否匿名
                 'imgs': imgurl,  # 图片url
             }
             opts['logger'].debug('Data: %s', data2)
@@ -302,13 +306,15 @@ def ordinary(N, opts=None):
             else:
                 opts['logger'].debug(
                     'Skipped sending comment request in dry run')
-            opts['logger'].debug('发送请求后的状态码:{},text:{}'.format(pj2.status_code,pj2.text))
+            opts['logger'].debug(
+                '发送请求后的状态码:{},text:{}'.format(pj2.status_code, pj2.text))
             opts['logger'].info(f"\t{i}.评价订单\t{oname}[{oid}]并晒图成功")
             opts['logger'].debug('Sleep time (s): %.1f', ORDINARY_SLEEP_SEC)
             time.sleep(ORDINARY_SLEEP_SEC)
             idx += 1
     N['待评价订单'] -= 1
     return N
+
 
 '''
 # 晒单评价
@@ -409,6 +415,8 @@ def sunbw(N, opts=None):
 '''
 
 # 追评
+
+
 def review(N, opts=None):
     opts = opts or {}
     req_et = []
@@ -470,11 +478,12 @@ def review(N, opts=None):
         opts['logger'].debug('oid: %s', oid)
         _, context = generation(oname, _type=0, opts=opts)
         opts['logger'].info(f'\t\t追评内容：{context}')
-        context = urllib.parse.quote(context, safe='/', encoding=None, errors=None)
+        context = urllib.parse.quote(
+            context, safe='/', encoding=None, errors=None)
         data1 = {
             'orderId': oid,
             'productId': pid,
-            'content': context.replace('%','%25'),
+            'content': context,
             'anonymousFlag': 1,
             'score': 5,
             'imgs': ''
@@ -485,7 +494,8 @@ def review(N, opts=None):
             pj1 = requests.post(url1, headers=headers2, data=data1)
         else:
             opts['logger'].debug('Skipped sending comment request in dry run')
-        opts['logger'].debug('发送请求后的状态码:{},text:{}'.format(pj1.status_code,pj1.text))
+        opts['logger'].debug(
+            '发送请求后的状态码:{},text:{}'.format(pj1.status_code, pj1.text))
         opts['logger'].info('完成')
         opts['logger'].debug('Sleep time (s): %.1f', REVIEW_SLEEP_SEC)
         time.sleep(REVIEW_SLEEP_SEC)
@@ -668,7 +678,8 @@ if __name__ == '__main__':
     # controling characters. When it comes to file logger, the number should
     # set to 8.
     formatter = StyleFormatter('%(asctime)s %(levelname)-19s %(message)s')
-    rawformatter = StyleFormatter('%(asctime)s %(levelname)-8s %(message)s', use_style=False)
+    rawformatter = StyleFormatter(
+        '%(asctime)s %(levelname)-8s %(message)s', use_style=False)
     console = logging.StreamHandler()
     console.setLevel(_logging_level)
     console.setFormatter(formatter)
@@ -714,7 +725,8 @@ if __name__ == '__main__':
         logger.debug('User configuration file exists')
         _cfg_path = USER_CONFIG_PATH
     else:
-        logger.debug('User configuration file doesn\'t exist, fallback to the default one')
+        logger.debug(
+            'User configuration file doesn\'t exist, fallback to the default one')
         _cfg_path = CONFIG_PATH
     with open(_cfg_path, 'r', encoding='utf-8') as f:
         cfg = yaml.safe_load(f)
