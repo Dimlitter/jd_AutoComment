@@ -267,9 +267,12 @@ def ordinary(N, opts=None):
             if not req.ok:
                 opts['logger'].warning(
                     'Status code of the response is %d, not 200', req1.status_code)
-            imgdata = req1.json()
+            try:
+                imgdata = req1.json()
+            except Exception as e:
+                imgdata = {}
             opts['logger'].debug('Image data: %s', imgdata)
-            if imgdata["imgComments"]["imgCommentCount"] == 0:
+            if imgdata != {} and imgdata["imgComments"]["imgCommentCount"] == 0:
                 opts['logger'].debug('Count of fetched image comments is 0')
                 opts['logger'].debug('Fetching images using another URL')
                 url1 = ('https://club.jd.com/discussion/getProductPageImage'
@@ -285,20 +288,33 @@ def ordinary(N, opts=None):
                         req1.status_code)
                 imgdata = req1.json()
                 opts['logger'].debug('Image data: %s', imgdata)
-            imgurl = imgdata["imgComments"]["imgList"][0]["imageUrl"]
+            try:
+                imgurl = imgdata["imgComments"]["imgList"][0]["imageUrl"]
+            except Exception as e:
+                imgurl = ""
             opts['logger'].debug('Image URL: %s', imgurl)
             opts['logger'].info(f'\t\t图片url={imgurl}')
             Str: str = urllib.parse.quote(
                 Str, safe='/', encoding=None, errors=None)
-            data2 = {
-                'orderId': oid,
-                'productId': pid,  # 商品id
-                'score': str(xing),  # 商品几星
-                'content': Str,  # 评价内容
-                'saveStatus': '1',
-                'anonymousFlag': '1',  # 是否匿名
-                'imgs': imgurl,  # 图片url
-            }
+            if imgurl != "":
+                data2 = {
+                    'orderId': oid,
+                    'productId': pid,  # 商品id
+                    'score': str(xing),  # 商品几星
+                    'content': Str,  # 评价内容
+                    'saveStatus': '1',
+                    'anonymousFlag': '1',  # 是否匿名
+                    'imgs': imgurl,  # 图片url
+                }
+            else:
+                data2 = {
+                    'orderId': oid,
+                    'productId': pid,  # 商品id
+                    'score': str(xing),  # 商品几星
+                    'content': Str.replace('%', '%25'),  # 评价内容
+                    'saveStatus': '1',
+                    'anonymousFlag': '1',  # 是否匿名
+                }
             opts['logger'].debug('Data: %s', data2)
             if not opts.get('dry_run'):
                 opts['logger'].debug('Sending comment request')
@@ -308,7 +324,11 @@ def ordinary(N, opts=None):
                     'Skipped sending comment request in dry run')
             opts['logger'].debug(
                 '发送请求后的状态码:{},text:{}'.format(pj2.status_code, pj2.text))
-            opts['logger'].info(f"\t{i}.评价订单\t{oname}[{oid}]并晒图成功")
+            if pj2.json()['success']:
+                opts['logger'].info(f"\t{i}.评价订单\t{oname}[{oid}]并晒图成功")
+            else:
+                opts['logger'].info(f"\t{i}.error信息:\t{pj2.json()['error']}")
+                exit(0)
             opts['logger'].debug('Sleep time (s): %.1f', ORDINARY_SLEEP_SEC)
             time.sleep(ORDINARY_SLEEP_SEC)
             idx += 1
