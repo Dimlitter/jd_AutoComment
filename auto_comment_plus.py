@@ -285,7 +285,8 @@ def ordinary(N, opts=None):
                         req1.status_code)
                 imgdata = req1.json()
                 opts['logger'].debug('Image data: %s', imgdata)
-            imgurl = imgdata["imgComments"]["imgList"][0]["imageUrl"]
+            imgurl = imgdata["imgComments"]["imgList"][0]["imageUrl"] + \
+                "," + imgdata["imgComments"]["imgList"][1]["imageUrl"]
             opts['logger'].debug('Image URL: %s', imgurl)
             opts['logger'].info(f'\t\t图片url={imgurl}')
             Str: str = urllib.parse.quote(
