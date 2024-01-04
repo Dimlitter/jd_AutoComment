@@ -89,7 +89,7 @@ class StyleFormatter(logging.Formatter):
 
 
 # 评价生成
-def generation(pname, _class=0, _type=1, opts=None):
+def generation(pname, _class: int = 0, _type: int = 1, opts=None) -> tuple[int, str]:
     opts = opts or {}
     items = ["商品名"]
     items.clear()
@@ -150,7 +150,7 @@ def generation(pname, _class=0, _type=1, opts=None):
 
 
 # 查询全部评价
-def all_evaluate(opts=None):
+def all_evaluate(opts=None) -> dict:
     opts = opts or {}
     N = {}
     url = "https://club.jd.com/myJdcomments/myJdcomment.action?"
@@ -185,7 +185,7 @@ def all_evaluate(opts=None):
 
 
 # 普通评价
-def ordinary(N, opts=None):
+def ordinary(N: dict, opts=None) -> dict:
     opts = opts or {}
     Order_data = []
     req_et = []
@@ -430,7 +430,7 @@ def sunbw(N, opts=None):
 # 追评
 
 
-def review(N, opts=None):
+def review(N: dict, opts=None) -> dict:
     opts = opts or {}
     req_et = []
     Order_data = []
@@ -518,7 +518,7 @@ def review(N, opts=None):
 
 
 # 服务评价
-def Service_rating(N, opts=None):
+def Service_rating(N: dict, opts=None) -> dict:
     opts = opts or {}
     Order_data = []
     req_et = []
@@ -602,7 +602,7 @@ def Service_rating(N, opts=None):
     return N
 
 
-def No(opts=None):
+def No(opts=None) -> dict:
     opts = opts or {}
     opts["logger"].info("")
     N = all_evaluate(opts)

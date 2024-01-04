@@ -9,7 +9,6 @@ import re
 import sys
 import time, yaml
 from urllib.parse import quote, urlencode
-
 import requests
 import zhon.hanzi
 from lxml import etree
@@ -28,7 +27,7 @@ default_logger.addHandler(log_console)
 
 class JDSpider:
     # 爬虫实现类：传入商品类别（如手机、电脑），构造实例。然后调用getData爬取数据。
-    def __init__(self, categlory):
+    def __init__(self, categlory: str):
         # jD起始搜索页面
         self.startUrl = "https://search.jd.com/Search?keyword=%s&enc=utf-8" % (
             quote(categlory)
@@ -54,12 +53,12 @@ class JDSpider:
         self.categlory = categlory
         self.iplist = {"http": [], "https": []}
 
-    def getParamUrl(self, productid, page, score):
+    def getParamUrl(self, productid: int, page: int, score: str) -> tuple[dict, str]:
         params = {  # 用于控制页数，页面信息数的数据，非常重要，必不可少，要不然会被JD识别出来，爬不出相应的数据。
-            "productId": "%s" % (productid),
-            "score": "%s" % (score),  # 1表示差评，2表示中评，3表示好评
+            "productId": "%s" % (str(productid)),
+            "score": "%s" % (str(score)),  # 1表示差评，2表示中评，3表示好评
             "sortType": "5",
-            "page": "%s" % (page),
+            "page": "%s" % (str(page)),
             "pageSize": "10",
             "isShadowSku": "0",
             "rid": "0",
@@ -69,13 +68,14 @@ class JDSpider:
         return params, url
 
     def getHeaders(
-        self, productid
-    ):  # 和初始的self.header不同，这是爬取某个商品的header，加入了商品id，我也不知道去掉了会怎样。
+        self, productid: str
+    ) -> dict:  # 和初始的self.header不同，这是爬取某个商品的header，加入了商品id，我也不知道去掉了会怎样。
         header = {
             "Referer": "https://item.jd.com/%s.html" % (productid),
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36",
             "cookie": cookie,
         }
+        # print(1111111,header)
         return header
 
     def getId(self):  # 获取商品id，为了得到具体商品页面的网址。结果保存在self.productId的数组里
@@ -87,19 +87,21 @@ class JDSpider:
 
     def getData(
         self,
-        maxPage,
-        score,
+        maxPage: int,
+        score: int,
     ):  # maxPage是爬取评论的最大页数，每页10条数据。差评和好评的最大一般页码不相同，一般情况下：好评>>差评>中评
         # maxPage遇到超出的页码会自动跳出，所以设大点也没有关系。
         # score是指那种评价类型，好评3、中评2、差评1。
 
-        comments = []
-        scores = []
+        comments: list = []
+        scores: list = []
         default_logger.info("爬取商品数量最多为8个,请耐心等待,也可以自行修改jdspider文件")
         if len(self.productsId) < 8:  # limit the sum of products
-            sum = len(self.productsId)
+            sum: int = len(self.productsId)
         else:
             sum = 8
+        print(sum)
+        exit(0)
         for j in range(sum):
             id = self.productsId[j]
             header = self.getHeaders(id)
@@ -127,13 +129,13 @@ class JDSpider:
                     default_logger.warning("页面次数已到：%d,超出范围(或未爬取到评论)" % (i))
                     break
                 for cdit in res_json["comments"]:
-                    comment = cdit["content"].replace("\n", " ").replace("\r", " ")
+                    comment: str = cdit["content"].replace("\n", " ").replace("\r", " ")
                     comments.append(comment)
                     scores.append(cdit["score"])
         # savepath = './'+self.categlory+'_'+self.comtype[score]+'.csv'
         default_logger.warning("已爬取%d 条 %s 评价信息" % (len(comments), self.comtype[score]))
         # 存入列表,简单处理评价
-        remarks = []
+        remarks: list = []
         for i in range(len(comments)):
             rst = re.findall(zhon.hanzi.sentence, comments[i])
             if (
