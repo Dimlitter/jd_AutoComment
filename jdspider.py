@@ -49,6 +49,22 @@ class JDSpider:
             "upgrade-insecure-requests": "1",
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.82 Safari/537.36",
         }
+        self.headers2 = {
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+            "accept-encoding": "gzip, deflate, br",
+            "accept-language": "zh-CN,zh;q=0.9",
+            "cache-control": "max-age=0",
+            "dnt": "1",
+            "sec-ch-ua": '" Not A;Brand";v="99", "Chromium";v="98", "Google Chrome";v="98"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": '"Windows"',
+            "sec-fetch-dest": "document",
+            "sec-fetch-site": "none",
+            "sec-fetch-user": "?1",
+            "upgrade-insecure-requests": "1",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.82 Safari/537.36",
+            "cookie": cookie,
+        }
         self.productsId = self.getId()
         self.comtype = {1: "nagetive", 2: "medium", 3: "positive"}
         self.categlory = categlory
@@ -74,12 +90,12 @@ class JDSpider:
         header = {
             "Referer": "https://item.jd.com/%s.html" % (productid),
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36",
-            "cookie": cookie,
+            # "cookie": cookie,
         }
         return header
 
     def getId(self):  # 获取商品id，为了得到具体商品页面的网址。结果保存在self.productId的数组里
-        response = requests.get(self.startUrl, headers=self.headers)
+        response = requests.get(self.startUrl, headers=self.headers2)
         if response.status_code != 200:
             default_logger.warning("状态码错误，爬虫连接异常！")
         html = etree.HTML(response.text)
@@ -107,7 +123,7 @@ class JDSpider:
                 param, url = self.getParamUrl(id, i, score)
                 default_logger.info(f"正在爬取当前商品的评论信息>>>>>>>>>第：%d 个，第 %d 页" % (j, i))
                 try:
-                    response = requests.get(url, headers=header, params=param)
+                    response = requests.get(url, params=param)
                 except Exception as e:
                     default_logger.warning(e)
                     break
