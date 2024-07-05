@@ -57,7 +57,7 @@ _FORMATTER_COLORS = {
 }
 
 
-def format_style_seqs(msg, use_style=True):
+def format_style_seqs(msg: str, use_style: bool = True):
     if use_style:
         msg = msg.replace("$RESET", _RESET_SEQ)
         msg = msg.replace("$BOLD", _BOLD_SEQ)
@@ -89,7 +89,7 @@ class StyleFormatter(logging.Formatter):
 
 
 # 评价生成
-def generation(pname, _class=0, _type=1, opts=None):
+def generation(pname, _class: int = 0, _type: int = 1, opts: object = None):
     opts = opts or {}
     items = ["商品名"]
     items.clear()
@@ -217,7 +217,9 @@ def ordinary(N, opts=None):
         opts["logger"].debug("Count of fetched order data: %d", len(elems))
         Order_data.extend(elems)
     if len(Order_data) != N["待评价订单"]:
-        opts["logger"].debug('Count of fetched order data doesn\'t equal N["待评价订单"]')
+        opts["logger"].debug(
+            'Count of fetched order data doesn\'t equal N["待评价订单"]'
+        )
         opts["logger"].debug("Clear the list Order_data")
         Order_data = []
         opts["logger"].debug("Total loop times: %d", loop_times)
@@ -509,7 +511,9 @@ def review(N, opts=None):
             pj1 = requests.post(url1, headers=headers2, data=data1)
         else:
             opts["logger"].debug("Skipped sending comment request in dry run")
-        opts["logger"].debug("发送请求后的状态码:{},text:{}".format(pj1.status_code, pj1.text))
+        opts["logger"].debug(
+            "发送请求后的状态码:{},text:{}".format(pj1.status_code, pj1.text)
+        )
         opts["logger"].info("完成")
         opts["logger"].debug("Sleep time (s): %.1f", REVIEW_SLEEP_SEC)
         time.sleep(REVIEW_SLEEP_SEC)
@@ -672,7 +676,7 @@ if __name__ == "__main__":
         "WARN",
         "INFO",
         "ERROR",
-        "FATAL"
+        "FATAL",
         # NOTE: `WARN` is an alias of `WARNING`. `FATAL` is an alias of
         # `CRITICAL`. Using these aliases is for developers' and users'
         # convenience.

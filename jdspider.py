@@ -70,7 +70,7 @@ class JDSpider:
         self.categlory = categlory
         self.iplist = {"http": [], "https": []}
 
-    def getParamUrl(self, productid, page, score):
+    def getParamUrl(self, productid: str, page: str, score: str) -> tuple[dict, str]:
         params = {  # 用于控制页数，页面信息数的数据，非常重要，必不可少，要不然会被JD识别出来，爬不出相应的数据。
             "productId": "%s" % (productid),
             "score": "%s" % (score),  # 1表示差评，2表示中评，3表示好评
@@ -85,7 +85,9 @@ class JDSpider:
         return params, url
 
     def getHeaders(
-        self, productid
+        self, productid: str
+    ) -> (
+        dict
     ):  # 和初始的self.header不同，这是爬取某个商品的header，加入了商品id，我也不知道去掉了会怎样。
         header = {
             "Referer": "https://item.jd.com/%s.html" % (productid),
@@ -94,7 +96,11 @@ class JDSpider:
         }
         return header
 
-    def getId(self):  # 获取商品id，为了得到具体商品页面的网址。结果保存在self.productId的数组里
+    def getId(
+        self,
+    ) -> (
+        list
+    ):  # 获取商品id，为了得到具体商品页面的网址。结果保存在self.productId的数组里
         response = requests.get(self.startUrl, headers=self.headers2)
         if response.status_code != 200:
             default_logger.warning("状态码错误，爬虫连接异常！")
@@ -103,25 +109,29 @@ class JDSpider:
 
     def getData(
         self,
-        maxPage,
-        score,
+        maxPage: int,
+        score: str,
     ):  # maxPage是爬取评论的最大页数，每页10条数据。差评和好评的最大一般页码不相同，一般情况下：好评>>差评>中评
         # maxPage遇到超出的页码会自动跳出，所以设大点也没有关系。
         # score是指那种评价类型，好评3、中评2、差评1。
 
         comments = []
         scores = []
-        default_logger.info("爬取商品数量最多为8个,请耐心等待,也可以自行修改jdspider文件")
+        default_logger.info(
+            "爬取商品数量最多为8个,请耐心等待,也可以自行修改jdspider文件"
+        )
         if len(self.productsId) < 8:  # limit the sum of products
             sum = len(self.productsId)
         else:
-            sum = 8
+            sum: int = 3
         for j in range(sum):
-            id = self.productsId[j]
-            header = self.getHeaders(id)
+            id: str = self.productsId[j]
+            # header = self.getHeaders(id)
             for i in range(1, maxPage):
                 param, url = self.getParamUrl(id, i, score)
-                default_logger.info(f"正在爬取当前商品的评论信息>>>>>>>>>第：%d 个，第 %d 页" % (j, i))
+                default_logger.info(
+                    f"正在爬取当前商品的评论信息>>>>>>>>>第：%d 个，第 %d 页" % (j, i)
+                )
                 try:
                     response = requests.get(url, params=param)
                 except Exception as e:
@@ -140,14 +150,18 @@ class JDSpider:
                     default_logger.warning(e)
                     continue
                 if len((res_json["comments"])) == 0:
-                    default_logger.warning("页面次数已到：%d,超出范围(或未爬取到评论)" % (i))
+                    default_logger.warning(
+                        "页面次数已到：%d,超出范围(或未爬取到评论)" % (i)
+                    )
                     break
                 for cdit in res_json["comments"]:
                     comment = cdit["content"].replace("\n", " ").replace("\r", " ")
                     comments.append(comment)
                     scores.append(cdit["score"])
         # savepath = './'+self.categlory+'_'+self.comtype[score]+'.csv'
-        default_logger.warning("已爬取%d 条 %s 评价信息" % (len(comments), self.comtype[score]))
+        default_logger.warning(
+            "已爬取%d 条 %s 评价信息" % (len(comments), self.comtype[score])
+        )
         # 存入列表,简单处理评价
         remarks = []
         for i in range(len(comments)):
@@ -162,7 +176,9 @@ class JDSpider:
                 or rst == ["?"]
                 or rst == ["!"]
             ):
-                default_logger.warning("拆分失败或结果不符(去除空格和标点符号)：%s" % (rst))
+                default_logger.warning(
+                    "拆分失败或结果不符(去除空格和标点符号)：%s" % (rst)
+                )
             else:
                 remarks.append(rst)
         result = self.solvedata(remarks=remarks)
@@ -190,7 +206,7 @@ class JDSpider:
             ]
         return result
 
-    def solvedata(self, remarks):
+    def solvedata(self, remarks) -> list:
         # 将数据拆分成句子
         sentences = []
         for i in range(len(remarks)):
