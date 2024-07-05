@@ -150,7 +150,7 @@ def generation(pname, _class: int = 0, _type: int = 1, opts: object = None):
 
 
 # 查询全部评价
-def all_evaluate(opts=None):
+def all_evaluate(opts: object = None) -> dict:
     opts = opts or {}
     N = {}
     url = "https://club.jd.com/myJdcomments/myJdcomment.action?"
@@ -606,7 +606,7 @@ def Service_rating(N, opts=None):
     return N
 
 
-def No(opts=None):
+def No(opts: object = None) -> dict:
     opts = opts or {}
     opts["logger"].info("")
     N = all_evaluate(opts)
@@ -616,7 +616,7 @@ def No(opts=None):
     return N
 
 
-def main(opts=None):
+def main(opts: object = None):
     opts = opts or {}
     opts["logger"].info("开始京东批量评价！")
     N = No(opts)
@@ -754,58 +754,60 @@ if __name__ == "__main__":
         )
         _cfg_path = CONFIG_PATH
     with open(_cfg_path, "r", encoding="utf-8") as f:
-        cfg = yaml.safe_load(f)
+        cfg: dict = yaml.safe_load(f)
     logger.debug("Closed the configuration file")
     logger.debug("Configurations in Python-dict format: %s", cfg)
-    ck = cfg["user"]["cookie"]
-    jdspider.cookie = ck.encode("utf-8")
+    # ck: str = cfg["user"]["cookie"]
+    cks: list = cfg["user"]
+    for ck in cks:
+        cookie = ck.get("cookie").encode("utf-8")
+        jdspider.cookie = cookie
+        headers2 = {
+            "cookie": cookie,
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.110 Safari/537.36",
+            "Connection": "keep-alive",
+            "Cache-Control": "max-age=0",
+            "X-Requested-With": "XMLHttpRequest",
+            "sec-ch-ua": "",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "",
+            "DNT": "1",
+            "Upgrade-Insecure-Requests": "1",
+            "Accept": "application/json, text/javascript, */*; q=0.01",
+            "Sec-Fetch-Site": "same-origin",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-User": "?1",
+            "Sec-Fetch-Dest": "empty",
+            "Referer": "https://club.jd.com/",
+            "Accept-Encoding": "gzip, deflate",
+            "Accept-Language": "zh-CN,zh;q=0.9",
+            # 'Content-Type':'application/x-www-form-urlencoded'
+        }
+        headers = {
+            "cookie": cookie,
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.82 Safari/537.36",
+            "Connection": "keep-alive",
+            "Cache-Control": "max-age=0",
+            "sec-ch-ua": '" Not A;Brand";v="99", "Chromium";v="98", "Google Chrome";v="98"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": '"Windows"',
+            "DNT": "1",
+            "Upgrade-Insecure-Requests": "1",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+            "Sec-Fetch-Site": "same-site",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-User": "?1",
+            "Sec-Fetch-Dest": "document",
+            "Referer": "https://order.jd.com/",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Language": "zh-CN,zh;q=0.9",
+        }
+        logger.debug("Builtin HTTP request header: %s", headers)
 
-    headers2 = {
-        "cookie": ck.encode("utf-8"),
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.110 Safari/537.36",
-        "Connection": "keep-alive",
-        "Cache-Control": "max-age=0",
-        "X-Requested-With": "XMLHttpRequest",
-        "sec-ch-ua": "",
-        "sec-ch-ua-mobile": "?0",
-        "sec-ch-ua-platform": "",
-        "DNT": "1",
-        "Upgrade-Insecure-Requests": "1",
-        "Accept": "application/json, text/javascript, */*; q=0.01",
-        "Sec-Fetch-Site": "same-origin",
-        "Sec-Fetch-Mode": "cors",
-        "Sec-Fetch-User": "?1",
-        "Sec-Fetch-Dest": "empty",
-        "Referer": "https://club.jd.com/",
-        "Accept-Encoding": "gzip, deflate",
-        "Accept-Language": "zh-CN,zh;q=0.9",
-        # 'Content-Type':'application/x-www-form-urlencoded'
-    }
-    headers = {
-        "cookie": ck.encode("utf-8"),
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.82 Safari/537.36",
-        "Connection": "keep-alive",
-        "Cache-Control": "max-age=0",
-        "sec-ch-ua": '" Not A;Brand";v="99", "Chromium";v="98", "Google Chrome";v="98"',
-        "sec-ch-ua-mobile": "?0",
-        "sec-ch-ua-platform": '"Windows"',
-        "DNT": "1",
-        "Upgrade-Insecure-Requests": "1",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-        "Sec-Fetch-Site": "same-site",
-        "Sec-Fetch-Mode": "navigate",
-        "Sec-Fetch-User": "?1",
-        "Sec-Fetch-Dest": "document",
-        "Referer": "https://order.jd.com/",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Accept-Language": "zh-CN,zh;q=0.9",
-    }
-    logger.debug("Builtin HTTP request header: %s", headers)
-
-    logger.debug("Starting main processes")
-    try:
-        main(opts)
-    # NOTE: It needs 3,000 times to raise this exception. Do you really want to
-    # do like this?
-    except RecursionError:
-        logger.error("多次出现未完成情况，程序自动退出")
+        logger.debug("Starting main processes")
+        try:
+            main(opts)
+        # NOTE: It needs 3,000 times to raise this exception. Do you really want to
+        # do like this?
+        except RecursionError:
+            logger.error("多次出现未完成情况，程序自动退出")

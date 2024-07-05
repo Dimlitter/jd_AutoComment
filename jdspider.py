@@ -16,10 +16,12 @@ from lxml import etree
 
 
 # Reference: https://github.com/fxsjy/jieba/blob/1e20c89b66f56c9301b0feed211733ffaa1bd72a/jieba/__init__.py#L27
-with open("./config.yml", "r", encoding="utf-8") as f:
-    cfg = yaml.safe_load(f)
+# with open("./config.yml", "r", encoding="utf-8") as f:
+#     cfg = yaml.safe_load(f)
 
-cookie = cfg["user"]["cookie"]
+# cookie = cfg["user"]["cookie"]
+cookie = ""
+# cookies = cfg["user"]  # 多账号多cookie
 log_console = logging.StreamHandler(sys.stderr)
 default_logger = logging.getLogger("jdspider")
 default_logger.setLevel(logging.DEBUG)
