@@ -130,7 +130,8 @@ class JDSpider:
             for i in range(1, maxPage):
                 param, url = self.getParamUrl(id, i, score)
                 default_logger.info(
-                    f"正在爬取当前商品的评论信息>>>>>>>>>第：%d 个，第 %d 页" % (j, i)
+                    f"正在爬取当前商品的评论信息>>>>>>>>>第：%d 个，第 %d 页"
+                    % (j + 1, i)
                 )
                 try:
                     response = requests.get(url, params=param)
