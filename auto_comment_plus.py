@@ -320,10 +320,14 @@ def ordinary(N, opts=None):
                 pj2 = requests.post(url2, headers=headers2, data=data2)
             else:
                 opts["logger"].debug("Skipped sending comment request in dry run")
-            opts["logger"].debug(
+            opts["logger"].info(
                 "发送请求后的状态码:{},text:{}".format(pj2.status_code, pj2.text)
             )
-            opts["logger"].info(f"\t{i}.评价订单\t{oname}[{oid}]并晒图成功")
+            if pj2.status_code == 200 and pj2.json()["success"]:
+                # 当发送后的状态码 200，并且返回值里的 success 是 true 才是晒图成功，此外所有状态均为晒图失败
+                opts["logger"].info(f"\t{i}.评价订单\t{oname}[{oid}]并晒图成功")
+            else:
+                opts["logger"].info(f"\t{i}.评价订单\t{oname}[{oid}]并晒图失败")
             opts["logger"].debug("Sleep time (s): %.1f", ORDINARY_SLEEP_SEC)
             time.sleep(ORDINARY_SLEEP_SEC)
             idx += 1
@@ -478,12 +482,12 @@ def review(N, opts=None):
             )
             opts["logger"].debug("Count of fetched order data: %d", len(elems))
             Order_data.extend(elems)
-    opts["logger"].info(f"当前共有{N['待追评']}个需要追评。")
+    opts["logger"].info(f"当前共有 {N['待追评']} 个需要追评。")
     opts["logger"].debug("Commenting on items")
     for i, Order in enumerate(Order_data):
         oname = Order.xpath("td[1]/div/div[2]/div/a/text()")[0]
         _id = Order.xpath("td[3]/div/a/@href")[0]
-        opts["logger"].info(f"\t开始第{i+1}，{oname}")
+        opts["logger"].info(f"\t开始追评第{i+1}，{oname}")
         opts["logger"].debug("_id: %s", _id)
         url1 = (
             "https://club.jd.com/afterComments/" "saveAfterCommentAndShowOrder.action"
@@ -565,7 +569,7 @@ def Service_rating(N, opts=None):
             elems = i.xpath('//*[@id="main"]/div[2]/div[2]/table/tr[@class="tr-bd"]')
             opts["logger"].debug("Count of fetched order data: %d", len(elems))
             Order_data.extend(elems)
-    opts["logger"].info(f"当前共有{N['服务评价']}个需要服务评价。")
+    opts["logger"].info(f"当前共有{N['服务评价']}个需要第一次服务评价。")
     opts["logger"].debug("Commenting on items")
     for i, Order in enumerate(Order_data):
         oname = Order.xpath("td[1]/div[1]/div[2]/div/a/text()")[0]
@@ -574,7 +578,7 @@ def Service_rating(N, opts=None):
         except IndexError:
             opts["logger"].warning("Failed to fetch oid")
             continue
-        opts["logger"].info(f"\t开始第{i+1}，{oname}")
+        opts["logger"].info(f"\t开始第一次评论，{i+1}，{oname}")
         opts["logger"].debug("oid: %s", oid)
         url1 = (
             f"https://club.jd.com/myJdcomments/insertRestSurvey.action"
