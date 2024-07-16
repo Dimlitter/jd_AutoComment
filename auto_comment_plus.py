@@ -323,7 +323,11 @@ def ordinary(N, opts=None):
             opts["logger"].info(
                 "发送请求后的状态码:{},text:{}".format(pj2.status_code, pj2.text)
             )
-            opts["logger"].info(f"\t{i}.评价订单\t{oname}[{oid}]并晒图成功")
+            if pj2.status_code == 200 and pj2.json()["success"]:
+                # 当发送后的状态码 200，并且返回值里的 success 是 true 才是晒图成功，此外所有状态均为晒图失败
+                opts["logger"].info(f"\t{i}.评价订单\t{oname}[{oid}]并晒图成功")
+            else:
+                opts["logger"].info(f"\t{i}.评价订单\t{oname}[{oid}]并晒图失败")
             opts["logger"].debug("Sleep time (s): %.1f", ORDINARY_SLEEP_SEC)
             time.sleep(ORDINARY_SLEEP_SEC)
             idx += 1
