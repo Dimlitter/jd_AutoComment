@@ -36,7 +36,7 @@ class JDSpider:
         self.commentBaseUrl = "https://sclub.jd.com/comment/productPageComments.action?"
         self.headers = {
             "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,"
-                      "*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+            "*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
             "accept-encoding": "gzip, deflate, br",
             "accept-language": "zh-CN,zh;q=0.9",
             "cache-control": "max-age=0",
@@ -49,11 +49,11 @@ class JDSpider:
             "sec-fetch-user": "?1",
             "upgrade-insecure-requests": "1",
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                          "Chrome/98.0.4758.82 Safari/537.36",
+            "Chrome/98.0.4758.82 Safari/537.36",
         }
         self.headers2 = {
             "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,"
-                      "*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+            "*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
             "accept-encoding": "gzip, deflate, br",
             "accept-language": "zh-CN,zh;q=0.9",
             "cache-control": "max-age=0",
@@ -66,7 +66,7 @@ class JDSpider:
             "sec-fetch-user": "?1",
             "upgrade-insecure-requests": "1",
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                          "Chrome/98.0.4758.82 Safari/537.36",
+            "Chrome/98.0.4758.82 Safari/537.36",
             "cookie": cookie,
         }
         self.productsId = self.getId()
@@ -74,7 +74,7 @@ class JDSpider:
         self.categlory = categlory
         self.iplist = {"http": [], "https": []}
 
-    def getParamUrl(self, productid: str, page: str, score: str) -> tuple[dict, str]:
+    def getParamUrl(self, productid: str, page: str, score: str):
         params = {  # 用于控制页数，页面信息数的数据，非常重要，必不可少，要不然会被JD识别出来，爬不出相应的数据。
             "productId": "%s" % productid,
             "score": "%s" % score,  # 1表示差评，2表示中评，3表示好评
@@ -96,7 +96,7 @@ class JDSpider:
         header = {
             "Referer": "https://item.jd.com/%s.html" % productid,
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                          "Chrome/75.0.3770.142 Safari/537.36",
+            "Chrome/75.0.3770.142 Safari/537.36",
             # "cookie": cookie,
         }
         return header
