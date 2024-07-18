@@ -768,7 +768,7 @@ if __name__ == "__main__":
     headers2 = {
         "cookie": ck.encode("utf-8"),
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                      "Chrome/114.0.5735.110 Safari/537.36",
+        "Chrome/114.0.5735.110 Safari/537.36",
         "Connection": "keep-alive",
         "Cache-Control": "max-age=0",
         "X-Requested-With": "XMLHttpRequest",
@@ -790,7 +790,7 @@ if __name__ == "__main__":
     headers = {
         "cookie": ck.encode("utf-8"),
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                      "Chrome/98.0.4758.82 Safari/537.36",
+        "Chrome/98.0.4758.82 Safari/537.36",
         "Connection": "keep-alive",
         "Cache-Control": "max-age=0",
         "sec-ch-ua": '" Not A;Brand";v="99", "Chromium";v="98", "Google Chrome";v="98"',
@@ -799,7 +799,7 @@ if __name__ == "__main__":
         "DNT": "1",
         "Upgrade-Insecure-Requests": "1",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,"
-                  "application/signed-exchange;v=b3;q=0.9",
+        "application/signed-exchange;v=b3;q=0.9",
         "Sec-Fetch-Site": "same-site",
         "Sec-Fetch-Mode": "navigate",
         "Sec-Fetch-User": "?1",
