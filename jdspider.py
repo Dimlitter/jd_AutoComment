@@ -139,6 +139,9 @@ class JDSpider:
                     % (j + 1, i)
                 )
                 try:
+                    default_logger.info(
+                        "爬取商品评价的 url 链接是" + url + "，商品的 id 是：" + id_
+                    )
                     response = requests.get(url, params=param)
                 except Exception as e:
                     default_logger.warning(e)
@@ -165,7 +168,7 @@ class JDSpider:
                     comments.append(comment)
                     scores.append(cdit["score"])
         # savepath = './'+self.categlory+'_'+self.comtype[score]+'.csv'
-        default_logger.warning(
+        default_logger.info(
             "已爬取%d 条 %s 评价信息" % (len(comments), self.comtype[score])
         )
         # 存入列表,简单处理评价
