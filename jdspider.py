@@ -7,13 +7,13 @@ import logging
 import random
 import re
 import sys
-import time, yaml
+import time
 from urllib.parse import quote, urlencode
 
 import requests
+import yaml
 import zhon.hanzi
 from lxml import etree
-
 
 # Reference: https://github.com/fxsjy/jieba/blob/1e20c89b66f56c9301b0feed211733ffaa1bd72a/jieba/__init__.py#L27
 with open("./config.yml", "r", encoding="utf-8") as f:
@@ -35,7 +35,8 @@ class JDSpider:
         )
         self.commentBaseUrl = "https://sclub.jd.com/comment/productPageComments.action?"
         self.headers = {
-            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,"
+            "*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
             "accept-encoding": "gzip, deflate, br",
             "accept-language": "zh-CN,zh;q=0.9",
             "cache-control": "max-age=0",
@@ -47,10 +48,12 @@ class JDSpider:
             "sec-fetch-site": "none",
             "sec-fetch-user": "?1",
             "upgrade-insecure-requests": "1",
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.82 Safari/537.36",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/98.0.4758.82 Safari/537.36",
         }
         self.headers2 = {
-            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,"
+            "*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
             "accept-encoding": "gzip, deflate, br",
             "accept-language": "zh-CN,zh;q=0.9",
             "cache-control": "max-age=0",
@@ -62,7 +65,8 @@ class JDSpider:
             "sec-fetch-site": "none",
             "sec-fetch-user": "?1",
             "upgrade-insecure-requests": "1",
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.82 Safari/537.36",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/98.0.4758.82 Safari/537.36",
             "cookie": cookie,
         }
         self.productsId = self.getId()
@@ -70,12 +74,12 @@ class JDSpider:
         self.categlory = categlory
         self.iplist = {"http": [], "https": []}
 
-    def getParamUrl(self, productid: str, page: str, score: str) -> tuple[dict, str]:
+    def getParamUrl(self, productid: str, page: str, score: str):
         params = {  # 用于控制页数，页面信息数的数据，非常重要，必不可少，要不然会被JD识别出来，爬不出相应的数据。
-            "productId": "%s" % (productid),
-            "score": "%s" % (score),  # 1表示差评，2表示中评，3表示好评
+            "productId": "%s" % productid,
+            "score": "%s" % score,  # 1表示差评，2表示中评，3表示好评
             "sortType": "5",
-            "page": "%s" % (page),
+            "page": "%s" % page,
             "pageSize": "10",
             "isShadowSku": "0",
             "rid": "0",
@@ -90,8 +94,9 @@ class JDSpider:
         dict
     ):  # 和初始的self.header不同，这是爬取某个商品的header，加入了商品id，我也不知道去掉了会怎样。
         header = {
-            "Referer": "https://item.jd.com/%s.html" % (productid),
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36",
+            "Referer": "https://item.jd.com/%s.html" % productid,
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/75.0.3770.142 Safari/537.36",
             # "cookie": cookie,
         }
         return header
@@ -110,7 +115,7 @@ class JDSpider:
     def getData(
         self,
         maxPage: int,
-        score: str,
+        score: int,
     ):  # maxPage是爬取评论的最大页数，每页10条数据。差评和好评的最大一般页码不相同，一般情况下：好评>>差评>中评
         # maxPage遇到超出的页码会自动跳出，所以设大点也没有关系。
         # score是指那种评价类型，好评3、中评2、差评1。
@@ -121,19 +126,22 @@ class JDSpider:
             "爬取商品数量最多为8个,请耐心等待,也可以自行修改jdspider文件"
         )
         if len(self.productsId) < 8:  # limit the sum of products
-            sum = len(self.productsId)
+            sum_ = len(self.productsId)
         else:
-            sum: int = 3
-        for j in range(sum):
-            id: str = self.productsId[j]
+            sum_: int = 3
+        for j in range(sum_):
+            id_: str = self.productsId[j]
             # header = self.getHeaders(id)
             for i in range(1, maxPage):
-                param, url = self.getParamUrl(id, i, score)
+                param, url = self.getParamUrl(id_, str(i), str(score))
                 default_logger.info(
                     f"正在爬取当前商品的评论信息>>>>>>>>>第：%d 个，第 %d 页"
                     % (j + 1, i)
                 )
                 try:
+                    default_logger.info(
+                        "爬取商品评价的 url 链接是" + url + "，商品的 id 是：" + id_
+                    )
                     response = requests.get(url, params=param)
                 except Exception as e:
                     default_logger.warning(e)
@@ -152,7 +160,7 @@ class JDSpider:
                     continue
                 if len((res_json["comments"])) == 0:
                     default_logger.warning(
-                        "页面次数已到：%d,超出范围(或未爬取到评论)" % (i)
+                        "页面次数已到：%d,超出范围(或未爬取到评论)" % i
                     )
                     break
                 for cdit in res_json["comments"]:
@@ -160,7 +168,7 @@ class JDSpider:
                     comments.append(comment)
                     scores.append(cdit["score"])
         # savepath = './'+self.categlory+'_'+self.comtype[score]+'.csv'
-        default_logger.warning(
+        default_logger.info(
             "已爬取%d 条 %s 评价信息" % (len(comments), self.comtype[score])
         )
         # 存入列表,简单处理评价

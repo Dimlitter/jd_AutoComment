@@ -5,12 +5,12 @@
 
 import argparse
 import copy
-import urllib
 import logging
 import os
 import random
 import sys
 import time
+import urllib
 
 import jieba  # just for linting
 import jieba.analyse
@@ -19,7 +19,6 @@ import yaml
 from lxml import etree
 
 import jdspider
-
 
 # constants
 CONFIG_PATH = "./config.yml"
@@ -90,6 +89,7 @@ class StyleFormatter(logging.Formatter):
 
 # 评价生成
 def generation(pname, _class: int = 0, _type: int = 1, opts: object = None):
+    result = []
     opts = opts or {}
     items = ["商品名"]
     items.clear()
@@ -135,6 +135,7 @@ def generation(pname, _class: int = 0, _type: int = 1, opts: object = None):
         opts["logger"].debug("_class is 1. Directly return name")
         return name
     else:
+        num = 0
         if _type == 1:
             num = 6
         elif _type == 0:
@@ -318,11 +319,11 @@ def ordinary(N, opts=None):
             if not opts.get("dry_run"):
                 opts["logger"].debug("Sending comment request")
                 pj2 = requests.post(url2, headers=headers2, data=data2)
+                opts["logger"].info(
+                    "发送请求后的状态码:{},text:{}".format(pj2.status_code, pj2.text)
+                )
             else:
                 opts["logger"].debug("Skipped sending comment request in dry run")
-            opts["logger"].info(
-                "发送请求后的状态码:{},text:{}".format(pj2.status_code, pj2.text)
-            )
             if pj2.status_code == 200 and pj2.json()["success"]:
                 # 当发送后的状态码 200，并且返回值里的 success 是 true 才是晒图成功，此外所有状态均为晒图失败
                 opts["logger"].info(f"\t{i}.评价订单\t{oname}[{oid}]并晒图成功")
@@ -513,11 +514,11 @@ def review(N, opts=None):
         if not opts.get("dry_run"):
             opts["logger"].debug("Sending comment request")
             pj1 = requests.post(url1, headers=headers2, data=data1)
+            opts["logger"].debug(
+                "发送请求后的状态码:{},text:{}".format(pj1.status_code, pj1.text)
+            )
         else:
             opts["logger"].debug("Skipped sending comment request in dry run")
-        opts["logger"].debug(
-            "发送请求后的状态码:{},text:{}".format(pj1.status_code, pj1.text)
-        )
         opts["logger"].info("完成")
         opts["logger"].debug("Sleep time (s): %.1f", REVIEW_SLEEP_SEC)
         time.sleep(REVIEW_SLEEP_SEC)
@@ -766,7 +767,8 @@ if __name__ == "__main__":
 
     headers2 = {
         "cookie": ck.encode("utf-8"),
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.110 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/114.0.5735.110 Safari/537.36",
         "Connection": "keep-alive",
         "Cache-Control": "max-age=0",
         "X-Requested-With": "XMLHttpRequest",
@@ -787,7 +789,8 @@ if __name__ == "__main__":
     }
     headers = {
         "cookie": ck.encode("utf-8"),
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.82 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/98.0.4758.82 Safari/537.36",
         "Connection": "keep-alive",
         "Cache-Control": "max-age=0",
         "sec-ch-ua": '" Not A;Brand";v="99", "Chromium";v="98", "Google Chrome";v="98"',
@@ -795,7 +798,8 @@ if __name__ == "__main__":
         "sec-ch-ua-platform": '"Windows"',
         "DNT": "1",
         "Upgrade-Insecure-Requests": "1",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,"
+        "application/signed-exchange;v=b3;q=0.9",
         "Sec-Fetch-Site": "same-site",
         "Sec-Fetch-Mode": "navigate",
         "Sec-Fetch-User": "?1",
