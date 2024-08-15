@@ -85,7 +85,9 @@ class JDSpider:
             "rid": "0",
             "fold": "1",
         }
+        default_logger.info("params:" + str(params))
         url = self.commentBaseUrl + urlencode(params)
+        default_logger.info("url:" + str(url))
         return params, url
 
     def getHeaders(
@@ -129,6 +131,7 @@ class JDSpider:
             sum_ = len(self.productsId)
         else:
             sum_: int = 3
+        default_logger.info("sum_:" + str(sum_))
         for j in range(sum_):
             id_: str = self.productsId[j]
             # header = self.getHeaders(id)
