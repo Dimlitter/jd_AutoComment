@@ -155,7 +155,7 @@ def all_evaluate(opts=None):
     opts = opts or {}
     N = {}
     url = "https://club.jd.com/myJdcomments/myJdcomment.action?"
-    opts["logger"].debug("URL: %s", url)
+    opts["logger"].info("URL: %s", url)
     opts["logger"].debug("Fetching website data")
     req = requests.get(url, headers=headers)
     opts["logger"].debug(
