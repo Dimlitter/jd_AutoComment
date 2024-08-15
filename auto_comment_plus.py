@@ -728,7 +728,7 @@ if __name__ == "__main__":
     logger.debug("Opening the log file")
     if opts["log_file"]:
         try:
-            handler = logging.FileHandler(opts["log_file"])
+            handler = logging.FileHandler(opts["log_file"], "w")
         except Exception as e:
             logger.error("Failed to open the file handler")
             logger.error("Error message: %s", e)
