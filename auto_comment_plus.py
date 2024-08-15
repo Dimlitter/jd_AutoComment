@@ -162,7 +162,7 @@ def all_evaluate(opts=None):
         "Successfully accepted the response with status code %d", req.status_code
     )
     if not req.ok:
-        opts["logger"].warning(
+        opts["logger"].debug(
             "Status code of the response is %d, not 200", req.status_code
         )
     req_et = etree.HTML(req.text)
@@ -613,11 +613,11 @@ def Service_rating(N, opts=None):
 
 def No(opts=None):
     opts = opts or {}
-    opts["logger"].info("")
+    # opts["logger"].info("")
     N = all_evaluate(opts)
     s = "----".join(["{} {}".format(i, N[i]) for i in N])
     opts["logger"].info(s)
-    opts["logger"].info("")
+    # opts["logger"].info("")
     return N
 
 
@@ -672,9 +672,14 @@ if __name__ == "__main__":
         action="store_true",
     )
     parser.add_argument(
-        "--log-level", help="specify logging level (default: info)", default="INFO"
+        "-lv",
+        "--log-level",
+        help="specify logging level (default: info)",
+        default="INFO",
     )
-    parser.add_argument("-o", "--log-file", help="specify logging file")
+    parser.add_argument(
+        "-o", "--log-file", help="specify logging file", default="log.txt"
+    )
     args = parser.parse_args()
     if args.log_level.upper() not in [
         "DEBUG",
