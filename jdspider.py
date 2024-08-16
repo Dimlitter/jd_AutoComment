@@ -109,6 +109,7 @@ class JDSpider:
         list
     ):  # 获取商品id，为了得到具体商品页面的网址。结果保存在self.productId的数组里
         response = requests.get(self.startUrl, headers=self.headers2)
+        default_logger.info("获取同类产品的搜索 url 结果：" + self.startUrl)
         if response.status_code != 200:
             default_logger.warning("状态码错误，爬虫连接异常！")
         html = etree.HTML(response.text)
@@ -127,7 +128,9 @@ class JDSpider:
         default_logger.info(
             "爬取商品数量最多为8个,请耐心等待,也可以自行修改jdspider文件"
         )
-        if len(self.productsId) < 8:  # limit the sum of products
+        if len(self.productsId) == 0:
+            default_logger.warning(f"完了，self.productsId是空的，后面会导致默认评价了")
+        elif 0 < len(self.productsId) < 8:  # limit the sum of products
             sum_ = len(self.productsId)
         else:
             sum_: int = 3

@@ -243,6 +243,7 @@ def ordinary(N, opts=None):
             opts["logger"].debug("oname_data: %s", oname_data)
             pid_data = Order.xpath('tr[@class="tr-bd"]/td[1]/div[1]/div[2]/div/a/@href')
             opts["logger"].debug("pid_data: %s", pid_data)
+
         except IndexError:
             opts["logger"].warning(f"第{i + 1}个订单未查找到商品，跳过。")
             continue
@@ -254,6 +255,12 @@ def ordinary(N, opts=None):
             opts["logger"].debug("Loop: %d / %d", idx + 1, loop_times1)
             pid = pid.replace("//item.jd.com/", "").replace(".html", "")
             opts["logger"].debug("pid: %s", pid)
+            if "javascript" in pid:
+                opts["logger"].error(
+                    "pid_data: %s,这个订单估计是京东外卖的，会导致此次评价失败，请把该 %s 商品手工评价后再运行程序。"
+                    % (pid, oname),
+                )
+                exit(0)
             opts["logger"].info(f"\t{i}.开始评价订单\t{oname}[{oid}]并晒图")
             url2 = "https://club.jd.com/myJdcomments/saveProductComment.action"
             opts["logger"].debug("URL: %s", url2)
@@ -277,6 +284,7 @@ def ordinary(N, opts=None):
                 opts["logger"].warning(
                     "Status code of the response is %d, not 200", req1.status_code
                 )
+            opts["logger"].info("imgdata_url:" + url1)
             imgdata = req1.json()
             opts["logger"].debug("Image data: %s", imgdata)
             if imgdata["imgComments"]["imgCommentCount"] == 0:
@@ -498,6 +506,12 @@ def review(N, opts=None):
             "http://club.jd.com/afterComments/productPublish.action?sku=", ""
         ).split("&orderId=")
         opts["logger"].debug("pid: %s", pid)
+        if "javascript" in pid:
+            opts["logger"].error(
+                "pid_data: %s,这个订单估计是京东外卖的，会导致此次评价失败，请把该 %s 商品手工评价后再运行程序。"
+                % (pid, oname),
+            )
+            exit(0)
         opts["logger"].debug("oid: %s", oid)
         _, context = generation(oname, _type=0, opts=opts)
         opts["logger"].info(f"\t\t追评内容：{context}")
