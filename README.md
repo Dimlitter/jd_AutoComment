@@ -46,7 +46,7 @@ cd jd_AutoComment
 pip install -r requirements.txt
 ```
 
-获取电脑版ck后填入配置文件。可以选择填入默认配置文件 `config.yml` ；也可以填入用户配置文件 `config.user.yml` （需要新建后将 `config.yml` 中的内容复制到该文件中），避免后续的更新覆盖 `config.yml` 中的内容。
+获取电脑版ck后`全部`填入配置文件。可以选择填入默认配置文件 `config.yml` ；也可以填入用户配置文件 `config.user.yml` （需要新建后将 `config.yml` 中的内容复制到该文件中），避免后续的更新覆盖 `config.yml` 中的内容。
 
 需要填入如下内容：
 
