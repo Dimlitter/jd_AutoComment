@@ -1,7 +1,5 @@
 # jd_AutoComment
 
-# 本分支为stable分支，功能基本可用，但更新可能不及时，请自行选择
-
 ## 鸣谢
 
 感谢[qiu-lzsnmb](https://github.com/qiu-lzsnmb)大佬的脚本和[Zhang Jiale](https://github.com/2274900)大佬的评论爬虫
