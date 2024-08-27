@@ -3,7 +3,7 @@
 # @Author : @qiu-lzsnmb and @Dimlitter
 # @File : auto_comment_plus.py
 
-import argparse
+import argparse, uuid
 import copy
 import logging
 import os
@@ -85,6 +85,53 @@ class StyleFormatter(logging.Formatter):
             )
             rcd.levelname = levelname_with_color
         return logging.Formatter.format(self, rcd)
+
+
+# 生成随机文件名
+def generate_unique_filename():
+    # 获取当前时间戳的最后5位
+    timestamp = str(int(time.time()))[-5:]
+
+    # 生成 UUID 的前5位
+    unique_id = str(uuid.uuid4().int)[:5]
+
+    # 组合生成10位的唯一文件名
+    unique_filename = f"{timestamp}{unique_id}.jpg"
+
+    return unique_filename
+
+
+# 下载图片
+def download_image(img_url, file_name):
+    fullUrl = f"https:{img_url}"
+    response = requests.get(fullUrl)
+    if response.status_code == 200:
+        with open(file_name, "wb") as file:
+            file.write(response.content)
+        return file_name
+    else:
+        print("Failed to download image")
+        return None
+
+
+# 上传图片到JD接口
+def upload_image(file_path, session, headers):
+
+    files = {
+        "name": (None, file_path),
+        # 不需要 PHPSESSID 时可以忽略
+        # 如果需要的话，可以从初次登录响应中获取
+        "Filedata": (file_path, open(file_path, "rb"), "image/jpeg"),
+    }
+
+    # 发起 POST 请求
+    response = session.post(
+        "https://club.jd.com/myJdcomments/ajaxUploadImage.action",
+        headers=headers,
+        files=files,
+    )
+
+    return response
 
 
 # 评价生成
@@ -183,6 +230,17 @@ def all_evaluate(opts=None):
             num = 0
         N[na] = int(num)
     return N
+
+
+def delete_jpg():
+    current_directory = os.getcwd()
+    files = os.listdir(current_directory)
+    for file in files:
+        if file.lower().endswith(".jpg"):
+            # 构建完整的文件路径
+            file_path = os.path.join(current_directory, file)
+            # 删除文件
+            os.remove(file_path)
 
 
 # 普通评价
@@ -287,6 +345,10 @@ def ordinary(N, opts=None):
             opts["logger"].info("imgdata_url:" + url1)
             imgdata = req1.json()
             opts["logger"].debug("Image data: %s", imgdata)
+            imgurl1 = imgdata["imgComments"]["imgList"][0]["imageUrl"]
+            opts["logger"].info("imgurl1 url: %s", imgurl1)
+            imgurl2 = imgdata["imgComments"]["imgList"][1]["imageUrl"]
+            opts["logger"].info("imgurl2 url: %s", imgurl2)
             if imgdata["imgComments"]["imgCommentCount"] == 0:
                 opts["logger"].debug("Count of fetched image comments is 0")
                 opts["logger"].debug("Fetching images using another URL")
@@ -306,11 +368,39 @@ def ordinary(N, opts=None):
                     )
                 imgdata = req1.json()
                 opts["logger"].debug("Image data: %s", imgdata)
-            imgurl = (
-                imgdata["imgComments"]["imgList"][0]["imageUrl"]
-                + ","
-                + imgdata["imgComments"]["imgList"][1]["imageUrl"]
-            )
+                imgurl1 = imgdata["imgComments"]["imgList"][0]["imageUrl"]
+                opts["logger"].info("imgurl1 url: %s", imgurl1)
+                imgurl2 = imgdata["imgComments"]["imgList"][1]["imageUrl"]
+                opts["logger"].info("imgurl2 url: %s", imgurl2)
+            session = requests.Session()
+            imgBasic = "//img14.360buyimg.com/shaidan/"
+            imgName1 = generate_unique_filename()
+            opts["logger"].debug(f"Image :{imgName1}")
+            downloaded_file1 = download_image(imgurl1, imgName1)
+            # 上传图片
+            if downloaded_file1:
+                imgPart1 = upload_image(imgName1, session, headers)
+                # print(imgPart1)  # 和上传图片操作
+                if imgPart1.status_code == 200:
+                    imgurl1 = f"{imgBasic}{imgPart1.text}"
+                else:
+                    imgurl1 = ""
+                    opts["logger"].info("上传图片失败")
+                    exit(0)
+            imgName2 = generate_unique_filename()
+            opts["logger"].debug(f"Image :{imgName2}")
+            downloaded_file2 = download_image(imgurl2, imgName2)
+            # 上传图片
+            if downloaded_file2:
+                imgPart2 = upload_image(imgName2, session, headers)
+                # print(imgPart2)  # 和上传图片操作
+                if imgPart2.status_code == 200:
+                    imgurl2 = f"{imgBasic}{imgPart2.text}"
+                else:
+                    imgurl2 = ""
+                    opts["logger"].info("上传图片失败")
+                    exit(0)
+            imgurl = imgurl1 + "," + imgurl2
             opts["logger"].debug("Image URL: %s", imgurl)
             opts["logger"].info(f"\t\t图片url={imgurl}")
             Str: str = urllib.parse.quote(Str, safe="/", encoding=None, errors=None)
@@ -341,6 +431,10 @@ def ordinary(N, opts=None):
             time.sleep(ORDINARY_SLEEP_SEC)
             idx += 1
     N["待评价订单"] -= 1
+
+    # 删除当前目录下的所有 jpg 图片
+    # delete_jpg()
+
     return N
 
 
