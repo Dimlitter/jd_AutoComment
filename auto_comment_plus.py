@@ -88,7 +88,7 @@ class StyleFormatter(logging.Formatter):
 
 
 # 生成随机文件名
-def generate_unique_filename():
+def generate_unique_filename() -> str:
     # 获取当前时间戳的最后5位
     timestamp = str(int(time.time()))[-5:]
 
@@ -102,35 +102,45 @@ def generate_unique_filename():
 
 
 # 下载图片
-def download_image(img_url, file_name):
-    fullUrl = f"https:{img_url}"
-    response = requests.get(fullUrl)
-    if response.status_code == 200:
-        with open(file_name, "wb") as file:
-            file.write(response.content)
-        return file_name
-    else:
-        print("Failed to download image")
-        return None
+def download_image(img_url: str, file_name: str) -> bool:
+    try:
+        img_path = os.path.exists("./img")
+        if img_path:
+            pass
+        else:
+            os.makedirs(img_path)
+        fullUrl = f"https:{img_url}"
+        response = requests.get(fullUrl, verify=False, timeout=10)
+        if response.status_code == 200:
+            with open(file_name, "wb") as file:
+                file.write(response.content)
+            return True
+    except:
+        pass
+    return False
 
 
 # 上传图片到JD接口
-def upload_image(file_path, session, headers):
+def upload_image(
+    file_path: str, session: requests.Session, headers: dict
+) -> requests.Response:
+    response = object
+    try:
+        files = {
+            "name": (None, file_path),
+            # 不需要 PHPSESSID 时可以忽略
+            # 如果需要的话，可以从初次登录响应中获取
+            "Filedata": (file_path, open(file_path, "rb"), "image/jpeg"),
+        }
 
-    files = {
-        "name": (None, file_path),
-        # 不需要 PHPSESSID 时可以忽略
-        # 如果需要的话，可以从初次登录响应中获取
-        "Filedata": (file_path, open(file_path, "rb"), "image/jpeg"),
-    }
-
-    # 发起 POST 请求
-    response = session.post(
-        "https://club.jd.com/myJdcomments/ajaxUploadImage.action",
-        headers=headers,
-        files=files,
-    )
-
+        # 发起 POST 请求
+        response = session.post(
+            "https://club.jd.com/myJdcomments/ajaxUploadImage.action",
+            headers=headers,
+            files=files,
+        )
+    except:
+        pass
     return response
 
 
@@ -233,14 +243,19 @@ def all_evaluate(opts=None):
 
 
 def delete_jpg():
-    current_directory = os.getcwd()
-    files = os.listdir(current_directory)
-    for file in files:
-        if file.lower().endswith(".jpg"):
-            # 构建完整的文件路径
-            file_path = os.path.join(current_directory, file)
-            # 删除文件
-            os.remove(file_path)
+    try:
+        current_directory = "./img/"
+        files = os.listdir(current_directory)
+        for file in files:
+            if file.lower().endswith(".jpg"):
+                # 构建完整的文件路径
+                file_path = os.path.join(current_directory, file)
+                # 删除文件
+                os.remove(file_path)
+        opts["logger"].info("删除 img 目录下的所有 jpg 图片成功")
+    except:
+        pass
+    opts["logger"].info("成功删除 img 目录下的所有 jpg 图片失败")
 
 
 # 普通评价
@@ -374,11 +389,10 @@ def ordinary(N, opts=None):
                 opts["logger"].info("imgurl2 url: %s", imgurl2)
             session = requests.Session()
             imgBasic = "//img14.360buyimg.com/shaidan/"
-            imgName1 = generate_unique_filename()
+            imgName1 = f"./img/" + generate_unique_filename()
             opts["logger"].debug(f"Image :{imgName1}")
-            downloaded_file1 = download_image(imgurl1, imgName1)
             # 上传图片
-            if downloaded_file1:
+            if download_image(imgurl1, imgName1):
                 imgPart1 = upload_image(imgName1, session, headers)
                 # print(imgPart1)  # 和上传图片操作
                 if imgPart1.status_code == 200:
@@ -387,11 +401,10 @@ def ordinary(N, opts=None):
                     imgurl1 = ""
                     opts["logger"].info("上传图片失败")
                     exit(0)
-            imgName2 = generate_unique_filename()
+            imgName2 = f"./img/" + generate_unique_filename()
             opts["logger"].debug(f"Image :{imgName2}")
-            downloaded_file2 = download_image(imgurl2, imgName2)
             # 上传图片
-            if downloaded_file2:
+            if download_image(imgurl2, imgName2):
                 imgPart2 = upload_image(imgName2, session, headers)
                 # print(imgPart2)  # 和上传图片操作
                 if imgPart2.status_code == 200:
@@ -433,8 +446,8 @@ def ordinary(N, opts=None):
     N["待评价订单"] -= 1
 
     # 删除当前目录下的所有 jpg 图片
-    # delete_jpg()
-
+    if opts["delete_jpg"]:
+        delete_jpg()
     return N
 
 
@@ -775,18 +788,25 @@ if __name__ == "__main__":
     # parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument(
+        "-dr",
         "--dry-run",
-        help="have a full run without comment submission",
+        help=f"无需提交评论即可完整运行",
         action="store_true",
     )
     parser.add_argument(
         "-lv",
         "--log-level",
-        help="specify logging level (default: info)",
+        help=f"指定日志记录级别(默认值:info)",
         default="INFO",
     )
     parser.add_argument(
-        "-o", "--log-file", help="specify logging file", default="log.txt"
+        "-dj",
+        "--delete-jpg",
+        help="删除./img/下载的所有图片(默认值:False,未开启)",
+        default=False,
+    )
+    parser.add_argument(
+        "-o", "--log-file", help="指定日志文件(默认值:log.txt)", default="log.txt"
     )
     args = parser.parse_args()
     if args.log_level.upper() not in [
@@ -808,6 +828,10 @@ if __name__ == "__main__":
         opts["log_file"] = args.log_file
     else:
         opts["log_file"] = None
+    if hasattr(args, "delete_jpg"):
+        opts["delete_jpg"] = args.delete_jpg
+    else:
+        opts["delete_jpg"] = False
 
     # logging on console
     _logging_level = getattr(logging, opts["log_level"])
