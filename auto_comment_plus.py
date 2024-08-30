@@ -98,17 +98,15 @@ def generate_unique_filename() -> str:
     # 组合生成10位的唯一文件名
     unique_filename = f"{timestamp}{unique_id}.jpg"
 
-    return unique_filename
+    return str(unique_filename)
 
 
 # 下载图片
 def download_image(img_url: str, file_name: str) -> bool:
     try:
-        img_path = os.path.exists("./img")
-        if img_path:
-            pass
-        else:
-            os.makedirs(img_path)
+        img_path = os.path.join(os.getcwd(), "img")
+        os.makedirs(img_path, exist_ok=True)
+        opts["logger"].info("img_path: %s", img_path)
         fullUrl = f"https:{img_url}"
         response = requests.get(fullUrl, verify=False, timeout=10)
         if response.status_code == 200:
@@ -244,7 +242,7 @@ def all_evaluate(opts=None):
 
 def delete_jpg():
     try:
-        current_directory = "./img/"
+        current_directory = os.path.join(os.getcwd(), "img")
         files = os.listdir(current_directory)
         for file in files:
             if file.lower().endswith(".jpg"):
@@ -389,8 +387,8 @@ def ordinary(N, opts=None):
                 opts["logger"].info("imgurl2 url: %s", imgurl2)
             session = requests.Session()
             imgBasic = "//img14.360buyimg.com/shaidan/"
-            imgName1 = f"./img/" + generate_unique_filename()
-            opts["logger"].debug(f"Image :{imgName1}")
+            imgName1 = os.path.join(os.getcwd(), "img", generate_unique_filename())
+            opts["logger"].info(f"imgName1 :{imgName1}")
             # 上传图片
             if download_image(imgurl1, imgName1):
                 imgPart1 = upload_image(imgName1, session, headers)
@@ -401,8 +399,8 @@ def ordinary(N, opts=None):
                     imgurl1 = ""
                     opts["logger"].info("上传图片失败")
                     exit(0)
-            imgName2 = f"./img/" + generate_unique_filename()
-            opts["logger"].debug(f"Image :{imgName2}")
+            imgName2 = os.path.join(os.getcwd(), "img", generate_unique_filename())
+            opts["logger"].info(f"imgName2 :{imgName2}")
             # 上传图片
             if download_image(imgurl2, imgName2):
                 imgPart2 = upload_image(imgName2, session, headers)
