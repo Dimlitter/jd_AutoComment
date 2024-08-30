@@ -358,32 +358,43 @@ def ordinary(N, opts=None):
             opts["logger"].info("imgdata_url:" + url1)
             imgdata = req1.json()
             opts["logger"].debug("Image data: %s", imgdata)
-            imgurl1 = imgdata["imgComments"]["imgList"][0]["imageUrl"]
-            opts["logger"].info("imgurl1 url: %s", imgurl1)
-            imgurl2 = imgdata["imgComments"]["imgList"][1]["imageUrl"]
-            opts["logger"].info("imgurl2 url: %s", imgurl2)
             if imgdata["imgComments"]["imgCommentCount"] == 0:
-                opts["logger"].debug("Count of fetched image comments is 0")
-                opts["logger"].debug("Fetching images using another URL")
-                url1 = (
-                    "https://club.jd.com/discussion/getProductPageImage"
-                    "CommentList.action?productId=1190881"
+                pass
+                opts["logger"].error(
+                    """imgdata["imgComments"]["imgCommentCount"] == 0,不存在评论图片,需要自己上传图片评论"""
                 )
-                opts["logger"].debug("URL: %s", url1)
-                req1 = requests.get(url1, headers=headers)
-                opts["logger"].debug(
-                    "Successfully accepted the response with status code %d",
-                    req1.status_code,
-                )
-                if not req.ok:
-                    opts["logger"].warning(
-                        "Status code of the response is %d, not 200", req1.status_code
-                    )
-                imgdata = req1.json()
-                opts["logger"].debug("Image data: %s", imgdata)
-                imgurl1 = imgdata["imgComments"]["imgList"][0]["imageUrl"]
+                exit(0)
+                # opts["logger"].debug("Count of fetched image comments is 0")
+                # opts["logger"].debug("Fetching images using another URL")
+                # url1 = (
+                #     "https://club.jd.com/discussion/getProductPageImage"
+                #     "CommentList.action?productId=1190881"
+                # )
+                # opts["logger"].debug("URL: %s", url1)
+                # req1 = requests.get(url1, headers=headers)
+                # opts["logger"].debug(
+                #     "Successfully accepted the response with status code %d",
+                #     req1.status_code,
+                # )
+                # if not req.ok:
+                #     opts["logger"].warning(
+                #         "Status code of the response is %d, not 200", req1.status_code
+                #     )
+                # imgdata = req1.json()
+                # opts["logger"].debug("Image data: %s", imgdata)
+                # img2_umm = random.randint(0, img_num)
+                # imgurl1 = imgdata["imgComments"]["imgList"][0]["imageUrl"]
+                # opts["logger"].info("imgurl1 url: %s", imgurl1)
+                # img2_umm = random.randint(0, img_num)
+                # imgurl2 = imgdata["imgComments"]["imgList"][1]["imageUrl"]
+                # opts["logger"].info("imgurl2 url: %s", imgurl2)
+            else:
+                img_num = len(imgdata["imgComments"]["imgList"])
+                img1_umm = random.randint(0, img_num)
+                imgurl1 = imgdata["imgComments"]["imgList"][img1_umm]["imageUrl"]
                 opts["logger"].info("imgurl1 url: %s", imgurl1)
-                imgurl2 = imgdata["imgComments"]["imgList"][1]["imageUrl"]
+                img2_umm = random.randint(0, img_num)
+                imgurl2 = imgdata["imgComments"]["imgList"][img2_umm]["imageUrl"]
                 opts["logger"].info("imgurl2 url: %s", imgurl2)
             session = requests.Session()
             imgBasic = "//img14.360buyimg.com/shaidan/"
@@ -547,9 +558,8 @@ def sunbw(N, opts=None):
     return N
 """
 
+
 # 追评
-
-
 def review(N, opts=None):
     opts = opts or {}
     req_et = []
@@ -629,11 +639,11 @@ def review(N, opts=None):
             "score": 5,
             "imgs": "",
         }
-        opts["logger"].debug("Data: %s", data1)
+        opts["logger"].info("Data: %s", data1)
         if not opts.get("dry_run"):
             opts["logger"].debug("Sending comment request")
             pj1 = requests.post(url1, headers=headers2, data=data1)
-            opts["logger"].debug(
+            opts["logger"].info(
                 "发送请求后的状态码:{},text:{}".format(pj1.status_code, pj1.text)
             )
         else:
