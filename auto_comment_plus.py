@@ -389,42 +389,34 @@ def ordinary(N, opts=None):
                 # imgurl2 = imgdata["imgComments"]["imgList"][1]["imageUrl"]
                 # opts["logger"].info("imgurl2 url: %s", imgurl2)
             else:
-                img_num = len(imgdata["imgComments"]["imgList"])
-                img1_umm = random.randint(0, img_num)
-                imgurl1 = imgdata["imgComments"]["imgList"][img1_umm]["imageUrl"]
-                opts["logger"].info("imgurl1 url: %s", imgurl1)
-                img2_umm = random.randint(0, img_num)
-                imgurl2 = imgdata["imgComments"]["imgList"][img2_umm]["imageUrl"]
-                opts["logger"].info("imgurl2 url: %s", imgurl2)
+                img_len = len(imgdata["imgComments"]["imgList"])
+                img_nums = [random.randint(0, img_len) for _ in range(4)]
+                imgurls = []
+                for img_num in img_nums:
+                    imgurls.append(
+                        imgdata["imgComments"]["imgList"][img_num]["imageUrl"]
+                    )
+                    opts["logger"].info(
+                        "imgurl{} url: {}".format(img_nums.index(img_num), img_num)
+                    )
             session = requests.Session()
             imgBasic = "//img14.360buyimg.com/shaidan/"
-            imgName1 = os.path.join(os.getcwd(), "img", generate_unique_filename())
-            opts["logger"].info(f"imgName1 :{imgName1}")
-            # 上传图片
-            if download_image(imgurl1, imgName1):
-                imgPart1 = upload_image(imgName1, session, headers)
-                # print(imgPart1)  # 和上传图片操作
-                if imgPart1.status_code == 200:
-                    imgurl1 = f"{imgBasic}{imgPart1.text}"
-                else:
-                    imgurl1 = ""
-                    opts["logger"].info("上传图片失败")
-                    exit(0)
-            imgName2 = os.path.join(os.getcwd(), "img", generate_unique_filename())
-            opts["logger"].info(f"imgName2 :{imgName2}")
-            # 上传图片
-            if download_image(imgurl2, imgName2):
-                imgPart2 = upload_image(imgName2, session, headers)
-                # print(imgPart2)  # 和上传图片操作
-                if imgPart2.status_code == 200:
-                    imgurl2 = f"{imgBasic}{imgPart2.text}"
-                else:
-                    imgurl2 = ""
-                    opts["logger"].info("上传图片失败")
-                    exit(0)
-            imgurl = imgurl1 + "," + imgurl2
-            opts["logger"].debug("Image URL: %s", imgurl)
-            opts["logger"].info(f"\t\t图片url={imgurl}")
+            remote_imgurl = []
+            for imgurl in imgurls:
+                imgName = os.path.join(os.getcwd(), "img", generate_unique_filename())
+                opts["logger"].info(f"imgName1 :{imgName}")
+                # 下载图片
+                if download_image(imgurl, imgName):
+                    # 上传图片
+                    imgPart = upload_image(imgName, session, headers)
+                    if imgPart.status_code == 200:
+                        remote_imgurl.append(f"{imgBasic}{imgPart.text}")
+                    else:
+                        # remote_imgurl.append("")
+                        opts["logger"].info("上传图片失败")
+                        exit(0)
+            remote_imgurl = ",".join(remote_imgurl)
+            opts["logger"].info(f"\t\t所有的图片url={remote_imgurl}")
             Str: str = urllib.parse.quote(Str, safe="/", encoding=None, errors=None)
             data2 = {
                 "orderId": oid,
@@ -433,7 +425,7 @@ def ordinary(N, opts=None):
                 "content": Str,  # 评价内容
                 "saveStatus": "1",
                 "anonymousFlag": "1",  # 是否匿名
-                "imgs": imgurl,  # 图片url
+                "imgs": remote_imgurl,  # 图片url
             }
             opts["logger"].debug("Data: %s", data2)
             if not opts.get("dry_run"):
