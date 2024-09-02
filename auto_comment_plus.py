@@ -210,7 +210,7 @@ def all_evaluate(opts=None):
     opts = opts or {}
     N = {}
     url = "https://club.jd.com/myJdcomments/myJdcomment.action?"
-    opts["logger"].info("URL: %s", url)
+    opts["logger"].info("通过下面的链接获取 cookie ,URL: %s", url)
     opts["logger"].debug("Fetching website data")
     req = requests.get(url, headers=headers)
     opts["logger"].debug(
@@ -252,8 +252,7 @@ def delete_jpg():
                 os.remove(file_path)
         opts["logger"].info("删除 img 目录下的所有 jpg 图片成功")
     except:
-        pass
-    opts["logger"].info("成功删除 img 目录下的所有 jpg 图片失败")
+        opts["logger"].info("删除 img 目录下的所有 jpg 图片失败")
 
 
 # 普通评价
@@ -364,30 +363,6 @@ def ordinary(N, opts=None):
                     """imgdata["imgComments"]["imgCommentCount"] == 0,不存在评论图片,需要自己上传图片评论"""
                 )
                 exit(0)
-                # opts["logger"].debug("Count of fetched image comments is 0")
-                # opts["logger"].debug("Fetching images using another URL")
-                # url1 = (
-                #     "https://club.jd.com/discussion/getProductPageImage"
-                #     "CommentList.action?productId=1190881"
-                # )
-                # opts["logger"].debug("URL: %s", url1)
-                # req1 = requests.get(url1, headers=headers)
-                # opts["logger"].debug(
-                #     "Successfully accepted the response with status code %d",
-                #     req1.status_code,
-                # )
-                # if not req.ok:
-                #     opts["logger"].warning(
-                #         "Status code of the response is %d, not 200", req1.status_code
-                #     )
-                # imgdata = req1.json()
-                # opts["logger"].debug("Image data: %s", imgdata)
-                # img2_umm = random.randint(0, img_num)
-                # imgurl1 = imgdata["imgComments"]["imgList"][0]["imageUrl"]
-                # opts["logger"].info("imgurl1 url: %s", imgurl1)
-                # img2_umm = random.randint(0, img_num)
-                # imgurl2 = imgdata["imgComments"]["imgList"][1]["imageUrl"]
-                # opts["logger"].info("imgurl2 url: %s", imgurl2)
             else:
                 img_len = len(imgdata["imgComments"]["imgList"])
                 img_nums = [random.randint(0, img_len) for _ in range(4)]
