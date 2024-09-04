@@ -119,10 +119,7 @@ def download_image(img_url: str, file_name: str) -> bool:
 
 
 # 上传图片到JD接口
-def upload_image(
-    file_path: str, session: requests.Session, headers: dict
-) -> requests.Response:
-    response = object
+def upload_image(file_path: str, session: requests.Session, headers: dict):
     try:
         files = {
             "name": (None, file_path),
@@ -137,9 +134,10 @@ def upload_image(
             headers=headers,
             files=files,
         )
+        return response
     except:
         pass
-    return response
+    return None
 
 
 # 评价生成
@@ -240,7 +238,7 @@ def all_evaluate(opts=None):
     return N
 
 
-def delete_jpg():
+def delete_jpg() -> bool:
     try:
         current_directory = os.path.join(os.getcwd(), "img")
         files = os.listdir(current_directory)
@@ -251,8 +249,11 @@ def delete_jpg():
                 # 删除文件
                 os.remove(file_path)
         opts["logger"].info("删除 img 目录下的所有 jpg 图片成功")
+        return True
     except:
-        opts["logger"].info("删除 img 目录下的所有 jpg 图片失败")
+        pass
+    opts["logger"].info("删除 img 目录下的所有 jpg 图片失败")
+    return False
 
 
 # 普通评价
@@ -260,6 +261,7 @@ def ordinary(N, opts=None):
     opts = opts or {}
     Order_data = []
     req_et = []
+    imgCommentCount_bool = True
     loop_times = N["待评价订单"] // 20
     opts["logger"].debug("Fetching website data")
     opts["logger"].debug("Total loop times: %d", loop_times)
@@ -313,7 +315,6 @@ def ordinary(N, opts=None):
             opts["logger"].debug("oname_data: %s", oname_data)
             pid_data = Order.xpath('tr[@class="tr-bd"]/td[1]/div[1]/div[2]/div/a/@href')
             opts["logger"].debug("pid_data: %s", pid_data)
-
         except IndexError:
             opts["logger"].warning(f"第{i + 1}个订单未查找到商品，跳过。")
             continue
@@ -336,16 +337,15 @@ def ordinary(N, opts=None):
             opts["logger"].debug("URL: %s", url2)
             xing, Str = generation(oname, opts=opts)
             opts["logger"].info(f"\t\t评价内容,星级{xing}：" + Str)
-
             # 获取图片
             opts["logger"].info(f"\t\t开始获取图片")
-            url1 = (
+            img_url = (
                 f"https://club.jd.com/discussion/getProductPageImageCommentList"
                 f".action?productId={pid}"
             )
             opts["logger"].debug("Fetching images using the default URL")
-            opts["logger"].debug("URL: %s", url1)
-            req1 = requests.get(url1, headers=headers)
+            opts["logger"].debug("imgdata_url: %s", img_url)
+            req1 = requests.get(img_url, headers=headers)
             opts["logger"].debug(
                 "Successfully accepted the response with status code %d",
                 req1.status_code,
@@ -354,15 +354,11 @@ def ordinary(N, opts=None):
                 opts["logger"].warning(
                     "Status code of the response is %d, not 200", req1.status_code
                 )
-            opts["logger"].info("imgdata_url:" + url1)
             imgdata = req1.json()
             opts["logger"].debug("Image data: %s", imgdata)
             if imgdata["imgComments"]["imgCommentCount"] == 0:
-                pass
-                opts["logger"].error(
-                    """imgdata["imgComments"]["imgCommentCount"] == 0,不存在评论图片,需要自己上传图片评论"""
-                )
-                exit(0)
+                opts["logger"].warning("""不存在评论图片, 默认文字五星好评""")
+                imgCommentCount_bool = False
             else:
                 img_len = len(imgdata["imgComments"]["imgList"])
                 img_nums = [random.randint(0, img_len) for _ in range(4)]
@@ -374,53 +370,57 @@ def ordinary(N, opts=None):
                     opts["logger"].info(
                         "imgurl{} url: {}".format(img_nums.index(img_num), img_num)
                     )
-            session = requests.Session()
-            imgBasic = "//img14.360buyimg.com/shaidan/"
-            remote_imgurl = []
-            for imgurl in imgurls:
-                imgName = os.path.join(os.getcwd(), "img", generate_unique_filename())
-                opts["logger"].info(f"imgName1 :{imgName}")
-                # 下载图片
-                if download_image(imgurl, imgName):
-                    # 上传图片
-                    imgPart = upload_image(imgName, session, headers)
-                    if imgPart.status_code == 200:
-                        remote_imgurl.append(f"{imgBasic}{imgPart.text}")
-                    else:
-                        # remote_imgurl.append("")
-                        opts["logger"].info("上传图片失败")
-                        exit(0)
-            remote_imgurl = ",".join(remote_imgurl)
-            opts["logger"].info(f"\t\t所有的图片url={remote_imgurl}")
+                session = requests.Session()
+                imgBasic = "//img14.360buyimg.com/shaidan/"
+                remote_imgurl = []
+                for imgurl in imgurls:
+                    imgName = os.path.join(
+                        os.getcwd(), "img", generate_unique_filename()
+                    )
+                    opts["logger"].info(f"imgName1 :{imgName}")
+                    # 下载图片
+                    if download_image(imgurl, imgName):
+                        # 上传图片
+                        imgPart = upload_image(imgName, session, headers)
+                        if imgPart.status_code == 200:
+                            remote_imgurl.append(f"{imgBasic}{imgPart.text}")
+                        else:
+                            # remote_imgurl.append("")
+                            opts["logger"].info("上传图片失败")
+                            exit(0)
+                remote_imgurl = ",".join(remote_imgurl)
+                opts["logger"].info(f"\t\t所有的图片url={remote_imgurl}")
             Str: str = urllib.parse.quote(Str, safe="/", encoding=None, errors=None)
-            data2 = {
+            Comment_data = {
                 "orderId": oid,
                 "productId": pid,  # 商品id
                 "score": str(xing),  # 商品几星
                 "content": Str,  # 评价内容
                 "saveStatus": "1",
                 "anonymousFlag": "1",  # 是否匿名
-                "imgs": remote_imgurl,  # 图片url
             }
-            opts["logger"].debug("Data: %s", data2)
+            if imgCommentCount_bool:
+                Comment_data["imgs"] = remote_imgurl  # 图片url
+            opts["logger"].debug("Comment_data: %s", Comment_data)
             if not opts.get("dry_run"):
                 opts["logger"].debug("Sending comment request")
-                pj2 = requests.post(url2, headers=headers2, data=data2)
+                Comment_resp = requests.post(url2, headers=headers, data=Comment_data)
                 opts["logger"].info(
-                    "发送请求后的状态码:{},text:{}".format(pj2.status_code, pj2.text)
+                    "发送请求后的状态码:{},text:{}".format(
+                        Comment_resp.status_code, Comment_resp.text
+                    )
                 )
             else:
                 opts["logger"].debug("Skipped sending comment request in dry run")
-            if pj2.status_code == 200 and pj2.json()["success"]:
+            if Comment_resp.status_code == 200 and Comment_resp.json()["success"]:
                 # 当发送后的状态码 200，并且返回值里的 success 是 true 才是晒图成功，此外所有状态均为晒图失败
-                opts["logger"].info(f"\t{i}.评价订单\t{oname}[{oid}]并晒图成功")
+                opts["logger"].info(f"\t{i}.评价订单\t{oname}[{oid}]并评论成功")
             else:
-                opts["logger"].info(f"\t{i}.评价订单\t{oname}[{oid}]并晒图失败")
+                opts["logger"].info(f"\t{i}.评价订单\t{oname}[{oid}]并评论失败")
             opts["logger"].debug("Sleep time (s): %.1f", ORDINARY_SLEEP_SEC)
             time.sleep(ORDINARY_SLEEP_SEC)
             idx += 1
     N["待评价订单"] -= 1
-
     # 删除当前目录下的所有 jpg 图片
     if opts["delete_jpg"]:
         delete_jpg()
@@ -598,18 +598,18 @@ def review(N, opts=None):
         _, context = generation(oname, _type=0, opts=opts)
         opts["logger"].info(f"\t\t追评内容：{context}")
         context = urllib.parse.quote(context, safe="/", encoding=None, errors=None)
-        data1 = {
+        data = {
             "orderId": oid,
             "productId": pid,
             "content": context,
             "anonymousFlag": 1,
             "score": 5,
-            "imgs": "",
+            # "imgs": "",
         }
-        opts["logger"].info("Data: %s", data1)
+        opts["logger"].info("Data: %s", data)
         if not opts.get("dry_run"):
             opts["logger"].debug("Sending comment request")
-            pj1 = requests.post(url1, headers=headers2, data=data1)
+            pj1 = requests.post(url1, headers=headers, data=data)
             opts["logger"].info(
                 "发送请求后的状态码:{},text:{}".format(pj1.status_code, pj1.text)
             )
@@ -682,7 +682,7 @@ def Service_rating(N, opts=None):
             f"?voteid=145&ruleid={oid}"
         )
         opts["logger"].debug("URL: %s", url1)
-        data1 = {
+        data = {
             "oid": oid,
             "gid": "32",
             "sid": "186194",
@@ -694,10 +694,10 @@ def Service_rating(N, opts=None):
             "ro899": f"899A{random.randint(4, 5)}",  # 快递员服务
             "ro900": f"900A{random.randint(4, 5)}",  # 快递员服务
         }
-        opts["logger"].debug("Data: %s", data1)
+        opts["logger"].debug("Data: %s", data)
         if not opts.get("dry_run"):
             opts["logger"].debug("Sending comment request")
-            pj1 = requests.post(url1, headers=headers, data=data1)
+            pj1 = requests.post(url1, headers=headers, data=data)
         else:
             opts["logger"].debug("Skipped sending comment request in dry run")
         opts["logger"].info("\t\t " + pj1.text)
@@ -889,7 +889,7 @@ if __name__ == "__main__":
         "sec-ch-ua-platform": "",
         "DNT": "1",
         "Upgrade-Insecure-Requests": "1",
-        "Accept": "application/json, text/javascript, */*; q=0.01",
+        "Accept": "application/json, text/javascript,text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,",
         "Sec-Fetch-Site": "same-origin",
         "Sec-Fetch-Mode": "cors",
         "Sec-Fetch-User": "?1",
