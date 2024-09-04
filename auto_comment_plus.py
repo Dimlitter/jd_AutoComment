@@ -248,6 +248,7 @@ def ordinary(N, opts=None):
     opts = opts or {}
     Order_data = []
     req_et = []
+    imgCommentCount_bool = True
     loop_times = N["待评价订单"] // 20
     opts["logger"].debug("Fetching website data")
     opts["logger"].debug("Total loop times: %d", loop_times)
@@ -301,7 +302,6 @@ def ordinary(N, opts=None):
             opts["logger"].debug("oname_data: %s", oname_data)
             pid_data = Order.xpath('tr[@class="tr-bd"]/td[1]/div[1]/div[2]/div/a/@href')
             opts["logger"].debug("pid_data: %s", pid_data)
-
         except IndexError:
             opts["logger"].warning(f"第{i + 1}个订单未查找到商品，跳过。")
             continue
@@ -324,117 +324,99 @@ def ordinary(N, opts=None):
             opts["logger"].debug("URL: %s", url2)
             xing, Str = generation(oname, opts=opts)
             opts["logger"].info(f"\t\t评价内容,星级{xing}：" + Str)
-
             # 获取图片
             opts["logger"].info(f"\t\t开始获取图片")
-            url1 = (
+            img_url = (
                 f"https://club.jd.com/discussion/getProductPageImageCommentList"
                 f".action?productId={pid}"
             )
             opts["logger"].debug("Fetching images using the default URL")
-            opts["logger"].debug("URL: %s", url1)
-            req1 = requests.get(url1, headers=headers)
+            opts["logger"].debug("URL: %s", img_url)
+            img_resp = requests.get(img_url, headers=headers)
             opts["logger"].debug(
                 "Successfully accepted the response with status code %d",
-                req1.status_code,
+                img_resp.status_code,
             )
             if not req.ok:
                 opts["logger"].warning(
-                    "Status code of the response is %d, not 200", req1.status_code
+                    "Status code of the response is %d, not 200", img_resp.status_code
                 )
-            opts["logger"].info("imgdata_url:" + url1)
-            imgdata = req1.json()
+            opts["logger"].info("imgdata_url:" + img_url)
+            imgdata = img_resp.json()
             opts["logger"].debug("Image data: %s", imgdata)
-            imgurl1 = imgdata["imgComments"]["imgList"][0]["imageUrl"]
-            opts["logger"].info("imgurl1 url: %s", imgurl1)
-            imgurl2 = imgdata["imgComments"]["imgList"][1]["imageUrl"]
-            opts["logger"].info("imgurl2 url: %s", imgurl2)
             if imgdata["imgComments"]["imgCommentCount"] == 0:
-                opts["logger"].debug("Count of fetched image comments is 0")
-                opts["logger"].debug("Fetching images using another URL")
-                url1 = (
-                    "https://club.jd.com/discussion/getProductPageImage"
-                    "CommentList.action?productId=1190881"
-                )
-                opts["logger"].debug("URL: %s", url1)
-                req1 = requests.get(url1, headers=headers)
-                opts["logger"].debug(
-                    "Successfully accepted the response with status code %d",
-                    req1.status_code,
-                )
-                if not req.ok:
-                    opts["logger"].warning(
-                        "Status code of the response is %d, not 200", req1.status_code
-                    )
-                imgdata = req1.json()
-                opts["logger"].debug("Image data: %s", imgdata)
+                opts["logger"].warning("这单没有图片数据，所以直接默认五星好评！！")
+            elif imgdata["imgComments"]["imgCommentCount"] > 0:
+                imgCommentCount_bool = False
                 imgurl1 = imgdata["imgComments"]["imgList"][0]["imageUrl"]
                 opts["logger"].info("imgurl1 url: %s", imgurl1)
                 imgurl2 = imgdata["imgComments"]["imgList"][1]["imageUrl"]
                 opts["logger"].info("imgurl2 url: %s", imgurl2)
-            session = requests.Session()
-            imgBasic = "//img14.360buyimg.com/shaidan/"
-            imgName1 = generate_unique_filename()
-            opts["logger"].debug(f"Image :{imgName1}")
-            downloaded_file1 = download_image(imgurl1, imgName1)
-            # 上传图片
-            if downloaded_file1:
-                imgPart1 = upload_image(imgName1, session, headers)
-                # print(imgPart1)  # 和上传图片操作
-                if imgPart1.status_code == 200:
-                    imgurl1 = f"{imgBasic}{imgPart1.text}"
-                else:
-                    imgurl1 = ""
-                    opts["logger"].info("上传图片失败")
-                    exit(0)
-            imgName2 = generate_unique_filename()
-            opts["logger"].debug(f"Image :{imgName2}")
-            downloaded_file2 = download_image(imgurl2, imgName2)
-            # 上传图片
-            if downloaded_file2:
-                imgPart2 = upload_image(imgName2, session, headers)
-                # print(imgPart2)  # 和上传图片操作
-                if imgPart2.status_code == 200:
-                    imgurl2 = f"{imgBasic}{imgPart2.text}"
-                else:
-                    imgurl2 = ""
-                    opts["logger"].info("上传图片失败")
-                    exit(0)
-            imgurl = imgurl1 + "," + imgurl2
-            opts["logger"].debug("Image URL: %s", imgurl)
-            opts["logger"].info(f"\t\t图片url={imgurl}")
+                session = requests.Session()
+                imgBasic = "//img14.360buyimg.com/shaidan/"
+                imgName1 = generate_unique_filename()
+                opts["logger"].debug(f"Image :{imgName1}")
+                downloaded_file1 = download_image(imgurl1, imgName1)
+                # 上传图片
+                if downloaded_file1:
+                    imgPart1 = upload_image(imgName1, session, headers)
+                    # print(imgPart1)  # 和上传图片操作
+                    if imgPart1.status_code == 200:
+                        imgurl1 = f"{imgBasic}{imgPart1.text}"
+                    else:
+                        imgurl1 = ""
+                        opts["logger"].info("上传图片失败")
+                        exit(0)
+                imgName2 = generate_unique_filename()
+                opts["logger"].debug(f"Image :{imgName2}")
+                downloaded_file2 = download_image(imgurl2, imgName2)
+                # 上传图片
+                if downloaded_file2:
+                    imgPart2 = upload_image(imgName2, session, headers)
+                    # print(imgPart2)  # 和上传图片操作
+                    if imgPart2.status_code == 200:
+                        imgurl2 = f"{imgBasic}{imgPart2.text}"
+                    else:
+                        imgurl2 = ""
+                        opts["logger"].info("上传图片失败")
+                        exit(0)
+                imgurl = imgurl1 + "," + imgurl2
+                opts["logger"].debug("Image URL: %s", imgurl)
+                opts["logger"].info(f"\t\t图片url={imgurl}")
             Str: str = urllib.parse.quote(Str, safe="/", encoding=None, errors=None)
-            data2 = {
+            Comment_data = {
                 "orderId": oid,
                 "productId": pid,  # 商品id
                 "score": str(xing),  # 商品几星
                 "content": Str,  # 评价内容
                 "saveStatus": "1",
                 "anonymousFlag": "1",  # 是否匿名
-                "imgs": imgurl,  # 图片url
             }
-            opts["logger"].debug("Data: %s", data2)
+            if imgCommentCount_bool:
+                Comment_data["imgs"] = imgurl  # 图片url
+
+            opts["logger"].debug("Data: %s", Comment_data)
             if not opts.get("dry_run"):
                 opts["logger"].debug("Sending comment request")
-                pj2 = requests.post(url2, headers=headers2, data=data2)
+                Comment_resp = requests.post(url2, headers=headers2, data=Comment_data)
                 opts["logger"].info(
-                    "发送请求后的状态码:{},text:{}".format(pj2.status_code, pj2.text)
+                    "发送请求后的状态码:{},text:{}".format(
+                        Comment_resp.status_code, Comment_resp.text
+                    )
                 )
             else:
                 opts["logger"].debug("Skipped sending comment request in dry run")
-            if pj2.status_code == 200 and pj2.json()["success"]:
+            if Comment_resp.status_code == 200 and Comment_resp.json()["success"]:
                 # 当发送后的状态码 200，并且返回值里的 success 是 true 才是晒图成功，此外所有状态均为晒图失败
-                opts["logger"].info(f"\t{i}.评价订单\t{oname}[{oid}]并晒图成功")
+                opts["logger"].info(f"\t{i}.评价订单\t{oname}[{oid}]评论成功")
             else:
-                opts["logger"].info(f"\t{i}.评价订单\t{oname}[{oid}]并晒图失败")
+                opts["logger"].info(f"\t{i}.评价订单\t{oname}[{oid}]评论失败")
             opts["logger"].debug("Sleep time (s): %.1f", ORDINARY_SLEEP_SEC)
             time.sleep(ORDINARY_SLEEP_SEC)
             idx += 1
     N["待评价订单"] -= 1
-
     # 删除当前目录下的所有 jpg 图片
     # delete_jpg()
-
     return N
 
 
