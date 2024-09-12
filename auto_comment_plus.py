@@ -346,8 +346,8 @@ def ordinary(N, opts=None):
             opts["logger"].debug("Image data: %s", imgdata)
             if imgdata["imgComments"]["imgCommentCount"] == 0:
                 opts["logger"].warning("这单没有图片数据，所以直接默认五星好评！！")
-            elif imgdata["imgComments"]["imgCommentCount"] > 0:
                 imgCommentCount_bool = False
+            elif imgdata["imgComments"]["imgCommentCount"] > 0:
                 imgurl1 = imgdata["imgComments"]["imgList"][0]["imageUrl"]
                 opts["logger"].info("imgurl1 url: %s", imgurl1)
                 imgurl2 = imgdata["imgComments"]["imgList"][1]["imageUrl"]
@@ -394,7 +394,6 @@ def ordinary(N, opts=None):
             }
             if imgCommentCount_bool:
                 Comment_data["imgs"] = imgurl  # 图片url
-
             opts["logger"].debug("Data: %s", Comment_data)
             if not opts.get("dry_run"):
                 opts["logger"].debug("Sending comment request")
