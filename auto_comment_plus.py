@@ -106,19 +106,24 @@ def download_image(img_url, file_name):
     fullUrl = f"https:{img_url}"
     response = requests.get(fullUrl)
     if response.status_code == 200:
-        with open(file_name, "wb") as file:
+        directory = "img"
+        if not os.path.exists(directory):
+            # 如果目录不存在，创建目录
+            os.makedirs(directory)
+        file_path = os.path.join(directory, file_name)
+        with open(file_path, "wb") as file:
             file.write(response.content)
-        return file_name
+        return file_path
     else:
         print("Failed to download image")
         return None
 
 
 # 上传图片到JD接口
-def upload_image(file_path, session, headers):
+def upload_image(filename, file_path, session, headers):
 
     files = {
-        "name": (None, file_path),
+        "name": (None, filename),
         # 不需要 PHPSESSID 时可以忽略
         # 如果需要的话，可以从初次登录响应中获取
         "Filedata": (file_path, open(file_path, "rb"), "image/jpeg"),
@@ -359,7 +364,9 @@ def ordinary(N, opts=None):
                 downloaded_file1 = download_image(imgurl1, imgName1)
                 # 上传图片
                 if downloaded_file1:
-                    imgPart1 = upload_image(imgName1, session, headers)
+                    imgPart1 = upload_image(
+                        imgName1, downloaded_file1, session, headers
+                    )
                     # print(imgPart1)  # 和上传图片操作
                     if imgPart1.status_code == 200:
                         imgurl1 = f"{imgBasic}{imgPart1.text}"
@@ -372,7 +379,9 @@ def ordinary(N, opts=None):
                 downloaded_file2 = download_image(imgurl2, imgName2)
                 # 上传图片
                 if downloaded_file2:
-                    imgPart2 = upload_image(imgName2, session, headers)
+                    imgPart2 = upload_image(
+                        imgName2, downloaded_file2, session, headers
+                    )
                     # print(imgPart2)  # 和上传图片操作
                     if imgPart2.status_code == 200:
                         imgurl2 = f"{imgBasic}{imgPart2.text}"
@@ -409,7 +418,7 @@ def ordinary(N, opts=None):
                 # 当发送后的状态码 200，并且返回值里的 success 是 true 才是晒图成功，此外所有状态均为晒图失败
                 opts["logger"].info(f"\t{i}.评价订单\t{oname}[{oid}]评论成功")
             else:
-                opts["logger"].info(f"\t{i}.评价订单\t{oname}[{oid}]评论失败")
+                opts["logger"].warning(f"\t{i}.评价订单\t{oname}[{oid}]评论失败")
             opts["logger"].debug("Sleep time (s): %.1f", ORDINARY_SLEEP_SEC)
             time.sleep(ORDINARY_SLEEP_SEC)
             idx += 1

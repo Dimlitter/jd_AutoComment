@@ -129,6 +129,7 @@ class JDSpider:
         )
         if len(self.productsId) == 0:
             default_logger.warning(f"完了，self.productsId是空的，后面会导致默认评价了")
+            sum_ = 0
         elif 0 < len(self.productsId) < 8:  # limit the sum of products
             sum_ = len(self.productsId)
         else:
