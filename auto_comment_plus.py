@@ -323,7 +323,7 @@ def ordinary(N, opts=None):
                     "pid_data: %s,这个订单估计是京东外卖的，会导致此次评价失败，请把该 %s 商品手工评价后再运行程序。"
                     % (pid, oname),
                 )
-                exit(0)
+                continue
             opts["logger"].info(f"\t{i}.开始评价订单\t{oname}[{oid}]并晒图")
             url2 = "https://club.jd.com/myJdcomments/saveProductComment.action"
             opts["logger"].debug("URL: %s", url2)
