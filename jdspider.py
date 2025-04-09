@@ -33,7 +33,7 @@ class JDSpider:
         self.startUrl = "https://search.jd.com/Search?keyword=%s&enc=utf-8" % (
             quote(categlory)
         )
-        self.commentBaseUrl = "https://sclub.jd.com/comment/productPageComments.action?"
+        self.commentBaseUrl = "https://api.m.jd.com/?"
         self.headers = {
             "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,"
             "*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
@@ -74,15 +74,20 @@ class JDSpider:
         self.iplist = {"http": [], "https": []}
 
     def getParamUrl(self, productid: str, page: str, score: str):
-        params = {  # 用于控制页数，页面信息数的数据，非常重要，必不可少，要不然会被JD识别出来，爬不出相应的数据。
-            "productId": "%s" % productid,
-            "score": "%s" % score,  # 1表示差评，2表示中评，3表示好评
-            "sortType": "5",
-            "page": "%s" % page,
-            "pageSize": "10",
-            "isShadowSku": "0",
-            "rid": "0",
-            "fold": "1",
+        params = {
+            "appid": "item-v3",
+            "functionId": "pc_club_productPageComments",
+            "client": "pc",
+            "body": {  # 用于控制页数，页面信息数的数据，非常重要，必不可少，要不然会被JD识别出来，爬不出相应的数据。
+                "productId": "%s" % productid,
+                "score": "%s" % score,  # 1表示差评，2表示中评，3表示好评
+                "sortType": "5",
+                "page": "%s" % page,
+                "pageSize": "10",
+                "isShadowSku": "0",
+                "rid": "0",
+                "fold": "1",
+            },
         }
         default_logger.info("params:" + str(params))
         url = self.commentBaseUrl + urlencode(params)
@@ -148,7 +153,7 @@ class JDSpider:
                     default_logger.info(
                         "爬取商品评价的 url 链接是" + url + "，商品的 id 是：" + id_
                     )
-                    response = requests.get(url, params=param)
+                    response = requests.get(url)
                 except Exception as e:
                     default_logger.warning(e)
                     break
