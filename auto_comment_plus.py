@@ -250,6 +250,7 @@ def delete_jpg():
 
 # 普通评价
 def ordinary(N, opts=None):
+    time.sleep(10)
     opts = opts or {}
     Order_data = []
     req_et = []
