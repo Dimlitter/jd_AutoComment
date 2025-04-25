@@ -22,5 +22,5 @@ jobs:
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
-          automatic_release_tag: "latest" # 添加这一行
+          automatic_release_tag: "${{ github.ref_name }}" # 修改这一行
 
