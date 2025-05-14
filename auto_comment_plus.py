@@ -20,6 +20,8 @@ from lxml import etree
 
 import jdspider
 
+# from http2_adapter import Http2Adapter
+
 # constants
 CONFIG_PATH = "./config.yml"
 USER_CONFIG_PATH = "./config.user.yml"
@@ -121,6 +123,9 @@ def download_image(img_url, file_name):
 
 # 上传图片到JD接口
 def upload_image(filename, file_path, session, headers):
+    # session.mount(
+    #     "https://club.jd.com/myJdcomments/ajaxUploadImage.action", Http2Adapter()
+    # )
 
     files = {
         "name": (None, filename),
@@ -171,7 +176,7 @@ def generation(pname, _class: int = 0, _type: int = 1, opts: object = None):
                 "赠品还行。",
             ]
         else:
-            result = spider.getData(4, 3)  # 这里可以自己改
+            result = spider.getData(2, 3)  # 这里可以自己改
         opts["logger"].debug("Result: %s", result)
 
     # class 0是评价 1是提取id
@@ -250,7 +255,7 @@ def delete_jpg():
 
 # 普通评价
 def ordinary(N, opts=None):
-    time.sleep(10)
+    time.sleep(3)
     opts = opts or {}
     Order_data = []
     req_et = []
@@ -359,7 +364,7 @@ def ordinary(N, opts=None):
                 imgurl2 = imgdata["imgComments"]["imgList"][1]["imageUrl"]
                 opts["logger"].info("imgurl2 url: %s", imgurl2)
                 session = requests.Session()
-                imgBasic = "//img14.360buyimg.com/shaidan/"
+                imgBasic = "//img20.360buyimg.com/shaidan/s645x515_"
                 imgName1 = generate_unique_filename()
                 opts["logger"].debug(f"Image :{imgName1}")
                 downloaded_file1 = download_image(imgurl1, imgName1)
@@ -369,7 +374,7 @@ def ordinary(N, opts=None):
                         imgName1, downloaded_file1, session, headers
                     )
                     # print(imgPart1)  # 和上传图片操作
-                    if imgPart1.status_code == 200:
+                    if imgPart1.status_code == 200 and ".jpg" in imgPart1.text:
                         imgurl1 = f"{imgBasic}{imgPart1.text}"
                     else:
                         imgurl1 = ""
@@ -384,7 +389,7 @@ def ordinary(N, opts=None):
                         imgName2, downloaded_file2, session, headers
                     )
                     # print(imgPart2)  # 和上传图片操作
-                    if imgPart2.status_code == 200:
+                    if imgPart2.status_code == 200 and ".jpg" in imgPart2.text:
                         imgurl2 = f"{imgBasic}{imgPart2.text}"
                     else:
                         imgurl2 = ""
@@ -870,7 +875,7 @@ if __name__ == "__main__":
     jdspider.cookie = ck.encode("utf-8")
 
     headers2 = {
-        "cookie": ck.encode("utf-8"),
+        "Cookie": ck.encode("utf-8"),
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
         "Chrome/114.0.5735.110 Safari/537.36",
         "Connection": "keep-alive",
@@ -892,25 +897,24 @@ if __name__ == "__main__":
         # 'Content-Type':'application/x-www-form-urlencoded'
     }
     headers = {
-        "cookie": ck.encode("utf-8"),
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/98.0.4758.82 Safari/537.36",
-        "Connection": "keep-alive",
-        "Cache-Control": "max-age=0",
-        "sec-ch-ua": '" Not A;Brand";v="99", "Chromium";v="98", "Google Chrome";v="98"',
-        "sec-ch-ua-mobile": "?0",
-        "sec-ch-ua-platform": '"Windows"',
+        "Cookie": ck.encode("utf-8"),
+        "User-Agent": '''Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36 Edg/136.0.0.0 Sec-Ch-Ua: "Chromium";v="136", "Microsoft Edge";v="136", "Not.A/Brand";v="99"''',
         "DNT": "1",
-        "Upgrade-Insecure-Requests": "1",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,"
-        "application/signed-exchange;v=b3;q=0.9",
-        "Sec-Fetch-Site": "same-site",
-        "Sec-Fetch-Mode": "navigate",
-        "Sec-Fetch-User": "?1",
-        "Sec-Fetch-Dest": "document",
-        "Referer": "https://order.jd.com/",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Accept-Language": "zh-CN,zh;q=0.9",
+        # "Connection": "keep-alive",
+        # "Cache-Control": "max-age=0",
+        # "sec-ch-ua": '" Not A;Brand";v="99", "Chromium";v="98", "Google Chrome";v="98"',
+        # "sec-ch-ua-mobile": "?0",
+        # "sec-ch-ua-platform": '"Windows"',
+        # "Upgrade-Insecure-Requests": "1",
+        # "Accept": "*/*",
+        # "Sec-Fetch-Site": "same-site",
+        # "Sec-Fetch-Mode": "navigate",
+        # "origin": "https://club.jd.com",
+        # "Sec-Fetch-User": "?1",
+        # "Sec-Fetch-Dest": "document",
+        # "Referer": "https://order.jd.com/",
+        # "Accept-Encoding": "gzip, deflate, br, zstd",
+        # "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
     }
     logger.debug("Builtin HTTP request header: %s", headers)
 
