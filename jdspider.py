@@ -31,7 +31,7 @@ default_logger.addHandler(log_console)
 # 定义基础请求头，避免重复代码
 BASE_HEADERS = {
     "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,"
-              "*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+    "*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
     "accept-encoding": "gzip, deflate, br",
     "accept-language": "zh-CN,zh;q=0.9",
     "cache-control": "max-age=0",
@@ -44,21 +44,23 @@ BASE_HEADERS = {
     "sec-fetch-user": "?1",
     "upgrade-insecure-requests": "1",
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                  "Chrome/98.0.4758.82 Safari/537.36",
+    "Chrome/98.0.4758.82 Safari/537.36",
 }
+
 
 class JDSpider:
     """
     京东爬虫类，用于爬取指定商品类别的评论信息。
     传入商品类别（如手机、电脑）构造实例，然后调用 getData 方法爬取数据。
     """
+
     def __init__(self, categlory):
         # 京东搜索商品的起始页面 URL
         self.startUrl = "https://search.jd.com/Search?keyword=%s&enc=utf-8" % (
             quote(categlory)
         )
         # 评论接口的基础 URL
-        self.commentBaseUrl = "https://api.m.jd.com/?"
+        self.commentBaseUrl = "https://club.jd.com"
         # 基础请求头
         self.headers = BASE_HEADERS.copy()
         # 带 cookie 的请求头
@@ -91,23 +93,27 @@ class JDSpider:
         :param score: 评论类型（1 差评，2 中评，3 好评）
         :return: 请求参数和完整 URL
         """
-        params = {
-            "appid": "item-v3",
-            "functionId": "pc_club_productPageComments",
-            "client": "pc",
-            "body": {
-                "productId": productid,
-                "score": score,
-                "sortType": "5",
-                "page": page,
-                "pageSize": "10",
-                "isShadowSku": "0",
-                "rid": "0",
-                "fold": "1",
-            },
-        }
-        default_logger.info("请求参数: " + str(params))
-        url = self.commentBaseUrl + urlencode(params)
+        path = (
+            "/discussion/getProductPageImageCommentList.action?productId=" + productid
+        )
+        params = {}
+        # params = {
+        #     "appid": "item-v3",
+        #     "functionId": "pc_club_productPageComments",
+        #     "client": "pc",
+        #     "body": {
+        #         "productId": productid,
+        #         "score": score,
+        #         "sortType": "5",
+        #         "page": page,
+        #         "pageSize": "10",
+        #         "isShadowSku": "0",
+        #         "rid": "0",
+        #         "fold": "1",
+        #     },
+        # }
+        # default_logger.info("请求参数: " + str(params))
+        url = self.commentBaseUrl + path
         default_logger.info("请求 URL: " + str(url))
         return params, url
 
@@ -120,7 +126,7 @@ class JDSpider:
         return {
             "Referer": f"https://item.jd.com/{productid}.html",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                          "Chrome/75.0.3770.142 Safari/537.36",
+            "Chrome/75.0.3770.142 Safari/537.36",
             # "cookie": cookie,
         }
 
@@ -149,7 +155,9 @@ class JDSpider:
         """
         comments = []
         scores = []
-        default_logger.info("爬取商品数量最多为 8 个，请耐心等待，也可以自行修改 jdspider 文件")
+        default_logger.info(
+            "爬取商品数量最多为 8 个，请耐心等待，也可以自行修改 jdspider 文件"
+        )
 
         # 确定要爬取的商品数量
         product_count = min(len(self.productsId), 8) if self.productsId else 0
@@ -164,7 +172,9 @@ class JDSpider:
                 default_logger.info(f"正在爬取第 {j + 1} 个商品的第 {i} 页评论信息")
 
                 try:
-                    default_logger.info(f"爬取商品评价的 URL 链接是 {url}，商品的 ID 是：{product_id}")
+                    default_logger.info(
+                        f"爬取商品评价的 URL 链接是 {url}，商品的 ID 是：{product_id}"
+                    )
                     response = requests.get(url, headers=self.getHeaders(product_id))
                     response.raise_for_status()  # 检查响应状态码
                 except requests.RequestException as e:
@@ -183,14 +193,20 @@ class JDSpider:
                     default_logger.warning(f"JSON 解析异常: {e}")
                     continue
 
-                if not res_json.get("comments"):
-                    default_logger.warning(f"页面次数已到：{i}，超出范围(或未爬取到评论)")
+                if res_json["imgComments"]["imgCommentCount"] == 0:
+                    default_logger.warning(
+                        f"爬取到的商品评价数量为 0，可能是最后一页或请求失败"
+                    )
                     break
 
-                for comment_data in res_json["comments"]:
-                    comment = comment_data["content"].replace("\n", " ").replace("\r", " ")
+                for comment_data in res_json["imgComments"]["imgList"]:
+                    comment = (
+                        comment_data["commentVo"]["content"]
+                        .replace("\n", " ")
+                        .replace("\r", " ")
+                    )
                     comments.append(comment)
-                    scores.append(comment_data["score"])
+                    scores.append(comment_data["commentVo"]["score"])
 
         default_logger.info(f"已爬取 {len(comments)} 条 {self.comtype[score]} 评价信息")
 
@@ -198,8 +214,18 @@ class JDSpider:
         remarks = []
         for comment in comments:
             sentences = re.findall(zhon.hanzi.sentence, comment)
-            if not sentences or sentences in [["。"], ["？"], ["！"], ["."], [","], ["?"], ["!"]]:
-                default_logger.warning(f"拆分失败或结果不符(去除空格和标点符号)：{sentences}")
+            if not sentences or sentences in [
+                ["。"],
+                ["？"],
+                ["！"],
+                ["."],
+                [","],
+                ["?"],
+                ["!"],
+            ]:
+                default_logger.warning(
+                    f"拆分失败或结果不符(去除空格和标点符号)：{sentences}"
+                )
             else:
                 remarks.append(sentences)
 
@@ -242,6 +268,7 @@ class JDSpider:
                 sentences.append(sentence)
         default_logger.info("爬取的评价结果：" + str(sentences))
         return sentences
+
 
 # 测试用例
 if __name__ == "__main__":
