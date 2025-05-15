@@ -145,7 +145,7 @@ def upload_image(filename, file_path, session, headers):
 
 
 # 评价生成
-def generation(pname, _class: int = 0, _type: int = 1, opts: object = None):
+def generation(pname:str, _class: int = 0, _type: int = 1, opts: object = None):
     result = []
     opts = opts or {}
     items = ["商品名"]

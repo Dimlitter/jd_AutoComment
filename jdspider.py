@@ -68,7 +68,7 @@ class JDSpider:
             **BASE_HEADERS,
             "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
             "accept-language": "en,zh-CN;q=0.9,zh;q=0.8",
-            "cookie": cookie,
+            "Cookie": cookie,
             "priority": "u=0, i",
             "sec-ch-ua": '"Microsoft Edge";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
             "sec-ch-ua-mobile": "?0",
@@ -144,7 +144,7 @@ class JDSpider:
             return []
 
         html = etree.HTML(response.text)
-        return html.xpath('//li[@class="gl-item"]/@data-sku')
+        return html.xpath('//li[@class="gl-item"]/@data-spu')
 
     def getData(self, maxPage: int, score: int):
         """
