@@ -144,7 +144,7 @@ class JDSpider:
             return []
 
         html = etree.HTML(response.text)
-        return html.xpath('//li[@class="gl-item"]/@data-spu')
+        return html.xpath('//li[@class="gl-item"]/@data-sku')
 
     def getData(self, maxPage: int, score: int):
         """
