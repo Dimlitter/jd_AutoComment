@@ -14,13 +14,44 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
       # ...
-      - name: Checkout Code
-        uses: actions/checkout@master
+      - name: 🛎️ 检出代码
+        uses: actions/checkout@v4
 
-      - name: Create Release
-        uses: "marvinpinto/action-automatic-releases@latest"
+      - name: 📝 输出提交信息
+        run: |
+          echo "======================================"
+          echo "🚀 触发 Release 工作流"
+          echo "分支: ${{ github.ref }}"
+          echo "Tag: ${{ github.ref_name }}"
+          echo "提交者: ${{ github.actor }}"
+          echo "提交信息: ${{ github.event.head_commit.message }}"
+          echo "提交时间: ${{ github.event.head_commit.timestamp }}"
+          echo "======================================"
+
+      - name: 🎉 创建 Release
+        uses: softprops/action-gh-release@v2
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          prerelease: false
-          automatic_release_tag: "${{ github.ref_name }}" # 修改这一行
+          tag_name: ${{ github.ref_name }}
+          name: "🎉 Release ${{ github.ref_name }}"
+          body: |
+            ## 🚀 发布说明
 
+            **发布人**: `${{ github.actor }}`
+            **分支**: `${{ github.ref }}`
+            **Tag**: `${{ github.ref_name }}`
+            **提交信息**: 
+            > ${{ github.event.head_commit.message }}
+
+            **提交时间**: `${{ github.event.head_commit.timestamp }}`
+
+            ---
+
+            自动化发布，感谢您的关注与支持！
+
+          draft: false
+          prerelease: false
+          # files: |
+          #   dist/**
+          #   README.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
