@@ -375,7 +375,7 @@ def ordinary(N, opts=None):
                     )
                     # print(imgPart1)  # 和上传图片操作
                     if imgPart1.status_code == 200 and ".jpg" in imgPart1.text:
-                        imgurl1 = f"{imgBasic}{imgPart1.text}"
+                        imgurl1t = f"{imgBasic}{imgPart1.text}"
                     else:
                         imgurl1 = ""
                         opts["logger"].info("上传图片失败")
@@ -390,7 +390,7 @@ def ordinary(N, opts=None):
                     )
                     # print(imgPart2)  # 和上传图片操作
                     if imgPart2.status_code == 200 and ".jpg" in imgPart2.text:
-                        imgurl2 = f"{imgBasic}{imgPart2.text}"
+                        imgurl2t = f"{imgBasic}{imgPart2.text}"
                     else:
                         imgurl2 = ""
                         opts["logger"].info("上传图片失败")
