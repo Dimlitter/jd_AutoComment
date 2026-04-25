@@ -3,3 +3,4 @@ requests
 lxml
 zhon
 pyyaml
+urllib3<2.0  # macOS LibreSSL 兼容性

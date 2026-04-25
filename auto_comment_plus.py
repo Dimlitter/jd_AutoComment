@@ -3,6 +3,9 @@
 # @Author : @qiu-lzsnmb and @Dimlitter
 # @File : auto_comment_plus.py
 
+
+from __future__ import annotations
+
 import argparse, uuid
 import copy
 import logging
@@ -259,7 +262,16 @@ def generation(pname: str, _class: int = 0, _type: int = 1, opts: dict | None = 
 
     # 提取商品名关键词
     try:
-        name = jieba.analyse.textrank(pname, topK=5, allowPOS="n")[0]
+        # 先尝试提取所有名词
+        all_keywords = jieba.analyse.textrank(pname, topK=10, allowPOS="n")
+        
+        # 过滤掉不合适的关键词（性别、数量词等）
+        exclude_keywords = {"男士", "女士", "男", "女", "一对", "一个", "一件"}
+        filtered_keywords = [kw for kw in all_keywords if kw not in exclude_keywords and len(kw) > 1]
+        
+        # 如果有过滤后的关键词，使用第一个；否则使用原始的第一个
+        name = filtered_keywords[0] if filtered_keywords else (all_keywords[0] if all_keywords else "宝贝")
+        
         if logger:
             logger.debug("Name: %s", name)
     except Exception as e:
@@ -1131,11 +1143,11 @@ if __name__ == "__main__":
         "-lv",
         "--log-level",
         help="指定日志级别 (默认: INFO)",
-        default="INFO",
+        default="DEBUG",
         choices=["DEBUG", "WARN", "INFO", "ERROR", "FATAL"],
     )
     parser.add_argument(
-        "-o", "--log-file", help="指定日志文件路径", default="log.txt"
+        "-o", "--log-file", help="指定日志文件路径（默认使用日期命名）", default=None
     )
     args = parser.parse_args()
     
@@ -1185,16 +1197,30 @@ if __name__ == "__main__":
         logger.debug("Opening the log file")
     
     # 配置文件日志
-    if opts["log_file"]:
+    if opts.get("log_file") is not False:  # 允许禁用文件日志
         try:
-            handler = logging.FileHandler(opts["log_file"], "w", encoding="utf-8")
+            # 创建 log 目录
+            log_dir = "log"
+            os.makedirs(log_dir, exist_ok=True)
+            
+            # 生成日志文件名（使用当天日期）
+            if opts.get("log_file"):
+                # 如果用户指定了日志文件路径，使用用户指定的
+                log_file_path = opts["log_file"]
+            else:
+                # 否则使用日期命名
+                today = time.strftime("%Y-%m-%d")
+                log_file_path = os.path.join(log_dir, f"{today}.txt")
+            
+            # 使用追加模式打开日志文件
+            handler = logging.FileHandler(log_file_path, "a", encoding="utf-8")
             handler.setLevel(_logging_level)
             handler.setFormatter(rawformatter)
             logger.addHandler(handler)
             jieba.default_logger.addHandler(handler)
             jdspider.default_logger.addHandler(handler)
             if logger:
-                logger.debug("Successfully set up file logger")
+                logger.debug("Successfully set up file logger: %s", log_file_path)
         except Exception as e:
             if logger:
                 logger.error("Failed to open the file handler")
