@@ -133,6 +133,7 @@ dmypy.json
 
 # user config
 config.user.yml
+config.yml
 .idea/
 .vscode/
 

@@ -1,0 +1,14 @@
+[project]
+name = "jd-autocomment"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "jieba>=0.42.1",
+    "lxml>=6.1.0",
+    "pyyaml>=6.0.3",
+    "requests>=2.32.5",
+    "urllib3<2.0",
+    "zhon>=2.1.1",
+]
